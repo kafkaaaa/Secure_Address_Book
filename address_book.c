@@ -185,11 +185,14 @@ void print_list()
 
 
 // 파일에서 자동으로 불러올때 사용
-void insert_into_list(Person* p) {
+void insert_list(Person* p) {
     Person* new = (Person*)malloc(sizeof(Person));
     strcpy(new->name, p->name);
     strcpy(new->phone, p->phone);
     strcpy(new->address, p->address);
+    if (head == NULL) {
+        head = new;
+    }
     tail->next = new;
     tail = new;
     person_cnt++;
