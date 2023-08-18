@@ -235,7 +235,86 @@ void insert_into_list()
 
 void update_list()
 {
+    if (person_cnt <= 0) {
+        printf("삭제할 데이터가 없습니다.\n");
+        return;
+    }
 
+    int update_option;
+    char name[20] = "";
+    char new_name[20] = "";
+    char phone[20] = "";
+    char new_phone[20] = "";
+    char address[100] = "";
+    char new_address[100] = "";
+
+    printf("----주소록을 수정합니다----\n");
+    printf("수정할 사람의 이름을 입력해주세요: ");
+    scanf("%s", name);
+    printf("[%s]의 데이터를 수정합니다.\n", name);
+
+    printf("1.이름  2.전화번호  3.주소\n");
+    printf("수정할 항목을 선택해주세요: ");
+    scanf("%d", &update_option);
+
+    Person *update_p = head;
+    // 데이터 수정하기
+    switch (update_option) {
+        case 1: // 이름 수정
+            printf("새로운 이름을 입력해주세요: ");
+            scanf("%s", new_name);
+
+            // 수정할 사람 찾기
+            while (update_p != NULL) {
+                if (strcmp(update_p->name, name) == 0) {
+                    strcpy(update_p->name, new_name);
+                    printf("[수정 완료!]\n");
+                    break;
+                }
+                update_p = update_p->next;
+            }
+            if (update_p == NULL) {
+                printf("[수정 실패!] 해당하는 사람이 없습니다.\n");
+            }
+            break;
+
+        case 2: // 전화번호 수정
+            printf("새로운 전화번호를 입력해주세요: ");
+            scanf("%s", new_phone);
+
+            // 수정할 사람 찾기
+            while (update_p != NULL) {
+                if (strcmp(update_p->phone, phone) == 0) {
+                    strcpy(update_p->phone, new_phone);
+                    printf("[수정 완료!]\n");
+                    break;
+                }
+                update_p = update_p->next;
+            }
+            if (update_p == NULL) {
+                printf("[수정 실패!] 해당하는 사람이 없습니다.\n");
+            }
+            break;
+
+
+        case 3: // 주소 수정
+            printf("새로운 주소를 입력해주세요: ");
+            scanf("%s", new_address);
+
+            // 수정할 사람 찾기
+            while (update_p != NULL) {
+                if (strcmp(update_p->address, address) == 0) {
+                    strcpy(update_p->address, new_address);
+                    printf("[수정 완료!]\n");
+                    break;
+                }
+                update_p = update_p->next;
+            }
+            if (update_p == NULL) {
+                printf("[수정 실패!] 해당하는 사람이 없습니다.\n");
+            }
+            break;
+    }
 }
 
 
