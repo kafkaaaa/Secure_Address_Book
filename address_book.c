@@ -4,6 +4,7 @@
 
 void init_address_list();
 void print_list();
+void insert_list();
 void insert_into_list();
 void update_list();
 void delete_list();
@@ -17,127 +18,128 @@ typedef struct Person {
     struct Person *next;
 } Person;
 
-Person *head, *tail;
-Person *list, *p, *now, *tmp;
+Person *head, *tail, *tmp;
 int person_cnt = 0; // 주소록에 등록된 사람 수
 FILE *fp;
 
-
 int main() {
-
     init_address_list();
-    int option;
+    int menu;
 
-    do {
-        printf("======= MENU =======\n");
-        printf("  #1. 주소록 조회\n");
+    while (1) {
+        printf("\n======= MENU =======\n");
+        printf("  #1. 주소록 보기\n");
         printf("  #2. 주소록 추가\n");
         printf("  #3. 주소록 수정\n");
         printf("  #4. 주소록 삭제\n");
         printf("  #5. 종료\n");
-        printf("======================\n");
-        printf("Select an option:  ");
-        scanf("%d", &option);
+        printf("====================\n");
+        printf("Select an option->  ");
+        scanf("%d", &menu);
+        // getchar();
 
-        if (option == 1) {
+        if (menu == 1) {
             print_list();
         }
-        else if (option == 2) {
+        else if (menu == 2) {
             insert_into_list();
         }
-        else if (option == 3) {
+        else if (menu == 3) {
             update_list();
         }
-        else if (option == 4) {
+        else if (menu == 4) {
             delete_list();
         }
-        else if (option == 5) {
+        else if (menu == 5) {
             printf("프로그램을 종료합니다.\n");
-            // 종료할 때 리스트에 있는 Data는 File로 저장
             save_file();
             break;
         }
         else {
             printf("1~5만 입력해주세요.\n");
         }
-    } while (1);
-
+    }
     return 0;
 }
 
 
 
-// 주소록 파일 불러오기
+// 파일로부터 주소록 데이터 불러오기
 void load_file()
 {
     char file_name[30];
 
     printf("***주소록 파일을 불러옵니다***\n");
-    printf("파일 이름을 입력해주세요:  ");
+    printf("파일 이름을 입력해주세요: ");
     scanf("%s", file_name);
     fp = fopen(file_name, "r");
+    Person* temp = (Person *)malloc(sizeof(Person));
 
     if (fp != NULL) {
-        printf("File Open Success!\n");
-
-        Person *temp = (Person*)malloc(sizeof(Person));
-        Person *p = NULL;
+        printf("File Open Success !\n");
 
         while (1) {
-            int isRead = fread(temp, sizeof(Person), 1, fp);
-            if (!isRead) break;
-            else {
-                if (head == NULL) {
-                    head = temp;
-                    p = temp;
-                }
-                else {
-                    p->next = temp;
-                    p = p->next;
-                    p->next = NULL;
-                }
-            }
+            if (feof(fp) != 0) break;
+            printf("[%d]번째 데이터 읽어오기 성공.\n", person_cnt+1);
+            // fscanf(fp, "%s", temp->name);
+            // fscanf(fp, "%s", temp->phone);
+            // fscanf(fp, "%s", temp->address);
+            fscanf(fp, "%s %s %s", temp->name, temp->phone, temp->address);
+            insert_list(temp);
         }
-        free(temp);
-        fclose(fp);
     }
     else {
-        printf("File Open Error!\n");
+        printf("File Open Error !\n\n");
     }
-    
-
-    //     while (feof(fp)) {
-    //         fscanf(fp, "%[^\n]s %[^\n]s %[^\n]s", tmp->name, tmp->phone, tmp->address);
-    //         if (head == NULL) {
-    //             head = tmp;
-    //             tail = tmp;
-    //         }
-    //         else {
-    //             tail->next = tmp;
-    //             tail = tmp;
-    //         }
-    //         tmp = tmp->next;
-    //         person_cnt++;
-    //     }
-    //     break;
-    // }
+    free(temp);
+    fclose(fp);
 }
 
 
 
-// 리스트에 있는 데이터를 파일에 저장하기
+// 종료할 때 리스트에 있는 Data를 파일로 저장하기
 void save_file()
 {
-    FILE* fp = fopen("output.txt", "w");
     int i;
-    Person *p = head;
-
-    for (i=0; i<person_cnt; i++) {
-        fputs(p->name, fp);
-        fputs(p->phone, fp);
-        fputs(p->address, fp);
-        p = p->next;
+    FILE* fout_p = fopen("output.txt", "w");
+    if (fout_p == NULL) {
+        printf("[output.txt] 파일 생성에 실패했습니다!\n");
+        return;
     }
+    else {
+        printf("[output.txt] 파일이 생성되었습니다.\n");
+    }
+
+    Person *p = head->next;
+    char buf[1000] = "";
+
+    while (1) {
+        p = p->next;
+        if (p == NULL) break;
+
+        strcat(buf, p->name);
+        strcat(buf, " ");
+        strcat(buf, p->phone);
+        strcat(buf, " ");
+        strcat(buf, p->address);
+        strcat(buf, "\n");
+    }
+    // 마지막 개행문자 제거
+    for (i=sizeof(buf); i>=0; i--) {
+        if (buf[i-1] == '\n') {
+            buf[i-1] = '\0';
+            break;
+        } 
+    }
+
+    if (fputs(buf, fout_p) < 0) {
+        printf("[ERROR] 파일로 저장하는데 실패했습니다.\n");
+    }
+    else {
+        printf("주소록 저장 성공\n");
+    }
+
+    fclose(fout_p);
 }
 
 
@@ -147,9 +149,12 @@ void init_address_list()
 {
     // 초기화
     fp = NULL;
-    head = NULL, tail = NULL;
-    person_cnt = 0;
+    head = (Person *)malloc(sizeof(Person));
+    tail = (Person *)malloc(sizeof(Person));
     tmp = (Person *)malloc(sizeof(Person));
+    head->next = tail;
+    tail->next = tail;
+    person_cnt = 0;
 
     load_file();
 }
@@ -162,44 +167,45 @@ void print_list()
 {
     if (head == NULL) {
         printf("\n주소록이 비어있습니다.\n");
+        return;
     }
     else {
-        printf("\n***전체 주소록을 출력합니다***\n");
-        printf("---현재 등록된 사람: %d명---\n", person_cnt);
-        printf("이름\t 전화번호\t 주소\n");
-        now = head;
+        printf("\n전체 주소록을 출력합니다...\n");
+        printf("<현재 등록된 사람: %d명>\n", person_cnt);
+        printf("-------------------------------\n");
+        printf("이름\t  전화번호\t  주소\n");
+        printf("-------------------------------\n");
+
+        Person* now = head->next;
         while (now != NULL) {
-            // printf("------------------\n");
-            printf("%s\t", now->name);
-            printf("%s\t", now->phone);
-            printf("%s\t", now->address);
-            printf("------------------\n");
+            printf("%s\t  %s\t  %s\n", now->name, now->phone, now->address);
             now = now->next;
         }
-        // printf("\n***전체 주소록을 출력합니다***\n");
-        // char buf[MAX] = {0, };
-        // fread(buf, 1, MAX, fp);
-        // printf("%s\n", buf);
+        printf("--------------END--------------\n");
     }
 }
 
 
-// 파일에서 자동으로 불러올때 사용
+// 파일에서 주소록을 읽어 연결리스트에 (한 노드씩) 추가하는 함수
 void insert_list(Person* p) {
-    Person* new = (Person*)malloc(sizeof(Person));
+    Person* new = (Person *)malloc(sizeof(Person)); // 리스트에 추가할 노드
     strcpy(new->name, p->name);
     strcpy(new->phone, p->phone);
     strcpy(new->address, p->address);
+
     if (head == NULL) {
-        head = new;
+        // head = new;
+        head->next = new;
     }
-    tail->next = new;
+    else {
+        tail->next = new;
+    }
     tail = new;
     person_cnt++;
 }
 
 
-// 직접 수동으로 추가할때
+// 사용자 입력으로 추가할때 사용하는 함수
 void insert_into_list()
 {
     // 주소록에 추가할 사람 노드
@@ -208,19 +214,16 @@ void insert_into_list()
 
     printf("주소록에 추가할 데이터를 입력하세요.\n");
     printf("이름: ");
-    scanf("%[^\n]s", new_person->name);
-    // gets(new_person->name);
+    scanf("%s", new_person->name);
 
     printf("전화번호: ");
-    scanf("%[^\n]s", new_person->phone);
-    // gets(new_person->phone);
+    scanf("%s", new_person->phone);
 
     printf("주소: ");
-    scanf("%[^\n]s", new_person->address);
-    // gets(new_person->address);
+    scanf("%s", new_person->address);
 
-    if (person_cnt == 0) {      // 주소록이 비어있으면 새로운 노드가 헤드임
-        head = new_person;
+    if (head == NULL) {
+        head->next = new_person;
     } else  {
         tail->next = new_person;
     }
@@ -239,73 +242,230 @@ void update_list()
 
 void delete_list()
 {
-    char name[20];
-    char phone[20];
-    char address[100];
+    if (person_cnt <= 0) {
+        printf("삭제할 데이터가 없습니다.\n");
+        return;
+    }
+
+    char name[20] = "";
+    char phone[20] = "";
+    char address[100] = "";
     int del_option;
     Person *prev = NULL, *temp = head;
     
-
-    printf("삭제할 데이터를 선택하세요.\n");
-    printf("1.이름 || 2.전화번호 || 3.주소\n");
+    printf("\n삭제할 데이터를 선택하세요.\n");
+    printf("1.이름  |  2.전화번호  |  3.주소\n");
     scanf("%d", &del_option);
-    // 연결리스트의 처음부터 대조하면서 데이터에 해당하는 사람을 주소록에서 삭제
+
+    // 연결리스트의 처음부터 대조하면서 일치하는 노드를 제거
     switch (del_option) {
         case 1:
             printf("주소록에서 삭제할 사람의 [이름]을 입력하세요: ");
-            scanf("%[^\n]s", name);
-            for (temp = head;  temp->next != NULL;  ) {
+            getchar();  // scanf 입력버퍼 문제
+            scanf("%s", name);
+
+            while (temp != NULL) {
                 if (strcmp(temp->name, name) == 0) {
-                    printf("[%s]을(를) 주소록에서 삭제합니다.", name);
-                    prev->next = temp->next;
-                    free(temp);
+                    if (temp == head) {         // 첫 번째 노드를 삭제하는 경우
+                        if (head->next == NULL) {
+                            printf("[%s]을(를) 주소록에서 삭제합니다.\n", name);
+                            head = tail = NULL;
+                            person_cnt--;
+                        }
+                        else {
+                            printf("[%s]을(를) 주소록에서 삭제합니다.\n", name);
+                            head = head->next;
+                            person_cnt--;
+                        }
+                    }
+                    else if (tail == temp) {    // 마지막 노드를 삭제하는 경우
+                        printf("[%s]을(를) 주소록에서 삭제합니다.\n", name);
+                        prev->next = NULL;
+                        tail = prev;
+                        person_cnt--;
+                    }
+                    else {                      // 중간 노드를 삭제하는 경우
+                        printf("[%s]을(를) 주소록에서 삭제합니다.\n", name);
+                        prev->next = temp->next;
+                        person_cnt--;
+                    }
+                    break;
                 }
                 prev = temp;
                 temp = temp->next;
             }
-            if (temp->next == NULL) {
-                printf("[삭제 실패] 해당하는 사람이 없습니다.\n");
+
+            if (temp == NULL) {
+                printf("[삭제 실패!] 해당하는 사람이 없습니다.\n");
             }
             break;
 
+            // prev = head;
+            // temp = head->next;
+
+            // // 삭제할 노드가 첫 노드인 경우
+            // if (strcmp(temp->name, name) == 0) {
+            //     printf("[%s]을(를) 주소록에서 삭제합니다.\n", name);
+            //     head = head->next->next;
+            //     person_cnt--;
+            // }
+            // else {
+            //     while (1) {
+            //         if (strcmp(temp->name, name) == 0) {
+            //             printf("[%s]을(를) 주소록에서 삭제합니다.\n", name);
+            //             prev->next = temp->next;
+            //             temp = temp->next;
+            //             person_cnt--;
+                    
+            //             if (temp == NULL) {
+            //                 printf("[삭제 실패!] 해당하는 사람이 없습니다.\n");
+            //             }
+            //             break;
+            //         }
+            //     }
+            //     break;
+            // }
+            // break;
+
+
+
+
+
+
+
+            // for (temp = head;  temp->next != NULL;  ) {
+            //     if (strcmp(temp->name, name) == 0) {
+            //         printf("[%s]을(를) 주소록에서 삭제합니다.", name);
+            //         prev->next = temp->next;
+            //         free(temp);
+            //     }
+            //     prev = temp;
+            //     temp = temp->next;
+            // }
+            // if (temp->next == NULL) {
+            //     printf("[삭제 실패] 해당하는 사람이 없습니다.\n");
+            // }
+            // break;
+
         case 2:
             printf("주소록에서 삭제할 사람의 [전화번호]를 입력하세요: ");
-            scanf("%[^\n]s", phone);
-            for (temp = head;  temp->next != NULL;  ) {
+            getchar();  // scanf 입력버퍼 문제
+            scanf("%s", phone);
+
+            while (temp != NULL) {
                 if (strcmp(temp->phone, phone) == 0) {
-                    printf("[%s]을(를) 주소록에서 삭제합니다.", phone);
-                    prev->next = temp->next;
-                    free(temp);
+                    if (temp == head) {         // 첫 번째 노드를 삭제하는 경우
+                        if (head->next == NULL) {
+                            printf("[%s]을(를) 주소록에서 삭제합니다.\n", phone);
+                            head = tail = NULL;
+                            person_cnt--;
+                        }
+                        else {
+                            printf("[%s]을(를) 주소록에서 삭제합니다.\n", phone);
+                            head = head->next;
+                            person_cnt--;
+                        }
+                    }
+                    else if (tail == temp) {    // 마지막 노드를 삭제하는 경우
+                        printf("[%s]을(를) 주소록에서 삭제합니다.\n", phone);
+                        prev->next = NULL;
+                        tail = prev;
+                        person_cnt--;
+                    }
+                    else {                      // 중간 노드를 삭제하는 경우
+                        printf("[%s]을(를) 주소록에서 삭제합니다.\n", phone);
+                        prev->next = temp->next;
+                        person_cnt--;
+                    }
+                    break;
                 }
                 prev = temp;
                 temp = temp->next;
             }
-            if (temp->next == NULL) {
-                printf("[삭제 실패] 해당하는 사람이 없습니다.\n");
+
+            if (temp == NULL) {
+                printf("[삭제 실패!] 해당하는 사람이 없습니다.\n");
             }
-            break;
+            break;        
+        
+            // printf("주소록에서 삭제할 사람의 [전화번호]를 입력하세요: ");
+            // scanf("%[^\n]s", phone);
+            // for (temp = head;  temp->next != NULL;  ) {
+            //     if (strcmp(temp->phone, phone) == 0) {
+            //         printf("[%s]을(를) 주소록에서 삭제합니다.", phone);
+            //         prev->next = temp->next;
+            //         free(temp);
+            //     }
+            //     prev = temp;
+            //     temp = temp->next;
+            // }
+            // if (temp->next == NULL) {
+            //     printf("[삭제 실패] 해당하는 사람이 없습니다.\n");
+            //     break;
+            // }
+            // break;
 
 
         case 3:
             printf("주소록에서 삭제할 사람의 [주소]를 입력하세요: ");
-            scanf("%[^\n]s", address);
-            for (temp = head;  temp->next != NULL;  ) {
+            getchar();  // scanf 입력버퍼 문제
+            scanf("%s", address);
+
+            while (temp != NULL) {
                 if (strcmp(temp->address, address) == 0) {
-                    printf("[%s]을(를) 주소록에서 삭제합니다.", address);
-                    prev->next = temp->next;
-                    free(temp);
+                    if (temp == head) {         // 첫 번째 노드를 삭제하는 경우
+                        if (head->next == NULL) {
+                            printf("[%s]을(를) 주소록에서 삭제합니다.\n", address);
+                            head = tail = NULL;
+                            person_cnt--;
+                        }
+                        else {
+                            printf("[%s]을(를) 주소록에서 삭제합니다.\n", address);
+                            head = head->next;
+                            person_cnt--;
+                        }
+                    }
+                    else if (tail == temp) {    // 마지막 노드를 삭제하는 경우
+                        printf("[%s]을(를) 주소록에서 삭제합니다.\n", address);
+                        prev->next = NULL;
+                        tail = prev;
+                        person_cnt--;
+                    }
+                    else {                      // 중간 노드를 삭제하는 경우
+                        printf("[%s]을(를) 주소록에서 삭제합니다.\n", address);
+                        prev->next = temp->next;
+                        person_cnt--;
+                    }
+                    break;
                 }
                 prev = temp;
                 temp = temp->next;
             }
-            if (temp->next == NULL) {
-                printf("[삭제 실패] 해당하는 사람이 없습니다.\n");
+
+            if (temp == NULL) {
+                printf("[삭제 실패!] 해당하는 사람이 없습니다.\n");
             }
             break;
-        
 
+            // printf("주소록에서 삭제할 사람의 [주소]를 입력하세요: ");
+            // scanf("%[^\n]s", address);
+            // for (temp = head;  temp->next != NULL;  ) {
+            //     if (strcmp(temp->address, address) == 0) {
+            //         printf("[%s]을(를) 주소록에서 삭제합니다.", address);
+            //         prev->next = temp->next;
+            //         free(temp);
+            //     }
+            //     prev = temp;
+            //     temp = temp->next;
+            // }
+            // if (temp->next == NULL) {
+            //     printf("[삭제 실패] 해당하는 사람이 없습니다.\n");
+            //     break;
+            // }
+            // break;
+        
         default:
-            printf("잘못 입력하셨습니다.\n");
+            printf("잘못된 입력입니다.\n");
             break;
     }
 }
