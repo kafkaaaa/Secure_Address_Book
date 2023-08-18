@@ -232,7 +232,7 @@ void insert_into_list()
 }
 
 
-
+// 주소록 수정 (미완성)
 void update_list()
 {
     if (person_cnt <= 0) {
