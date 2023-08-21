@@ -284,7 +284,7 @@ void update_list()
 
             // 수정할 사람 찾기
             while (update_p != NULL) {
-                if (strcmp(update_p->phone, phone) == 0) {
+                if (strcmp(update_p->name, name) == 0) {
                     strcpy(update_p->phone, new_phone);
                     printf("[수정 완료!]\n");
                     break;
@@ -303,7 +303,7 @@ void update_list()
 
             // 수정할 사람 찾기
             while (update_p != NULL) {
-                if (strcmp(update_p->address, address) == 0) {
+                if (strcmp(update_p->name, name) == 0) {
                     strcpy(update_p->address, new_address);
                     printf("[수정 완료!]\n");
                     break;
