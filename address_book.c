@@ -106,13 +106,12 @@ void load_file()
         while (1) {
             if (feof(fp) != 0) break;
             printf("[%d]번째 데이터 읽어오기 성공\n", person_cnt+1);
-            fscanf(fp, "%d", &(temp->id));
-            fscanf(fp, "%[^ ,], %[^ ,], %[^ ,]\n", temp->name, temp->phone, temp->address);
+            fscanf(fp, "%d, %[^,], %[^,], %[^\n]", &(temp->id), temp->name, temp->phone, temp->address);
             // fscanf(fp, "%d", &(temp->id));
-            // fscanf(fp, ",%s", temp->name);
-            // fscanf(fp, ",%s", temp->phone);
-            // fscanf(fp, ",%s", temp->address);
-            // fscanf(fp, "%d, %[^,], %[^,], %[^,]", &(temp->id), temp->name, temp->phone, temp->address);
+            // fscanf(fp, "%*[, \t\n]%s%*[, \t\n]", temp->name);
+            // fscanf(fp, "%*[, \t\n]%s%*[, \t\n]", temp->phone);
+            // fscanf(fp, "%*[, \t\n]%s%*[, \t\n]", temp->address);
+            
             // fscanf(fp, "%d, %s, %s, %s", &(temp->id), temp->name, temp->phone, temp->address);
             insert_list(temp);
         }
