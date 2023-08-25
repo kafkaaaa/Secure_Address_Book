@@ -86,13 +86,13 @@ void load_file()
         if (strlen(file_name) > FILE_NAME_LIMIT) {
             printf("파일명 길이 초과. 다시 입력해주세요.\n\n");
         }
+        // if (scanf_s("%s", file_name, FILE_NAME_LIMIT) == 0) {
+        //     printf("파일명 길이 초과. 다시 입력해주세요.\n");
+        // }
         else if (fopen(file_name, "rb") == NULL) {
             printf("파일 열기 실패!! 파일명을 확인해주세요.\n\n");
         }
         else break;
-        // if (scanf_s("%s", file_name, FILE_NAME_LIMIT) == 0) {
-        //     printf("파일명 길이 초과. 다시 입력해주세요.\n");
-        // }
     }
 
     fp = fopen(file_name, "rb");
@@ -105,14 +105,9 @@ void load_file()
         printf("\nFile Open Success !\n\n");
         while (1) {
             if (feof(fp) != 0) break;
-            printf("[%d]번째 데이터 읽어오기 성공\n", person_cnt+1);
+            // fread(temp, sizeof(Person), 1, fp);
             fscanf(fp, "%d, %[^,], %[^,], %[^\n]", &(temp->id), temp->name, temp->phone, temp->address);
-            // fscanf(fp, "%d", &(temp->id));
-            // fscanf(fp, "%*[, \t\n]%s%*[, \t\n]", temp->name);
-            // fscanf(fp, "%*[, \t\n]%s%*[, \t\n]", temp->phone);
-            // fscanf(fp, "%*[, \t\n]%s%*[, \t\n]", temp->address);
-            
-            // fscanf(fp, "%d, %s, %s, %s", &(temp->id), temp->name, temp->phone, temp->address);
+            printf("[%d]번째 데이터 읽어오기 성공\n", person_cnt+1);
             insert_list(temp);
         }
     }
@@ -124,32 +119,41 @@ void load_file()
 }
 
 
+// #define SAVE_MODE_TXT 1
+#define SAVE_MODE_DAT 1
+
+#if defined(SAVE_MODE_TXT)
+    #define FOUT_NAME "output.txt"
+#elif defined(SAVE_MODE_DAT)
+    #define FOUT_NAME "output.dat"
+#endif
+
 
 // 프로그램 종료시 리스트에 있는 Data를 파일로 저장하기
 void save_file()
 {
     int i;
-    FILE* fout_p = fopen("output.txt", "wb");
+    FILE* fout_p = fopen(FOUT_NAME, "wb");
 
     if (fout_p == NULL) {
-        printf("[output.txt] 파일 생성에 실패했습니다!\n");
+        printf("[%s] 파일 생성에 실패했습니다!\n", FOUT_NAME);
         return;
     }
     else {
-        printf("[output.txt] 파일이 생성되었습니다.\n");
+        printf("[%s] 파일이 생성되었습니다.\n", FOUT_NAME);
     }
 
     Person *p = head->next;
-    // char buf[MAX] = "";
 
     while (1) {
         p = p->next;
         if (p == NULL) break;
-        // strcat(buf, p->name);   strcat(buf, " ");
-        // strcat(buf, p->phone);  strcat(buf, " ");
-        // strcat(buf, p->address);    strcat(buf, "\n");
+        // text 형태로 저장
         fprintf(fout_p, "%d,", p->id);
         fprintf(fout_p, "%s,%s,%s\n", p->name, p->phone, p->address);
+
+        // binary 형태로 저장 (.dat)
+        // fwrite(p, sizeof(Person), 1, fout_p);
     }
 
     // 마지막 개행문자 제거
@@ -162,13 +166,6 @@ void save_file()
     //         buf[i-1] = '\0';
     //         break;
     //     } 
-    // }
-
-    // if (fputs(buf, fout_p) < 0) {
-    //     printf("[ERROR] 파일로 저장하는데 실패했습니다.\n");
-    // }
-    // else {
-    //     printf("주소록 저장 성공\n");
     // }
 
     printf("주소록 저장 성공. 프로그램을 종료합니다.\n");
