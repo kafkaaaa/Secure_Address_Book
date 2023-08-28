@@ -1,64 +1,43 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdint.h>
+#include "test.h"
 
-// Enable ECB, CTR and CBC mode. Note this can be done before including aes.h or at compile-time.
-// E.g. with GCC by using the -D flag: gcc -c aes.c -DCBC=0 -DCTR=1 -DECB=1
-#define CBC 1   // Cipher Block Chaining (블럭을 체인으로 묶는 방식, 초기벡터IV 사용)
-// #define CTR 1   // Counter (1씩 증가하는 counter와 nonce 사용)
-// #define ECB 1   // Electronic Code Block (모든 블럭이 같은 암호화 키 사용)
+// int main(void)
+// {
+//     // int exit;
 
-#include "AES.h"
-#include "time.h"
-#include "pkcs7_padding.c"
+// // #if defined(AES256)
+// //     printf("\nTesting AES256\n\n");
+// // #elif defined(AES192)
+// //     printf("\nTesting AES192\n\n");
+// // #elif defined(AES128)
+// //     printf("\nTesting AES128\n\n");
+// // #else
+// //     printf("You need to specify a symbol between AES128, AES192 or AES256. Exiting");
+// //     return 0;
+// // #endif
 
-
-static void phex(uint8_t* str);
-static int test_encrypt_cbc(void);
-static int test_decrypt_cbc(void);
-static int test_encrypt_ctr(void);
-static int test_decrypt_ctr(void);
-static int test_encrypt_ecb(void);
-static int test_decrypt_ecb(void);
-static void test_encrypt_ecb_verbose(void);
-static void my_test(void);
-
-int main(void)
-{
-    // int exit;
-
-#if defined(AES256)
-    printf("\nTesting AES256\n\n");
-#elif defined(AES192)
-    printf("\nTesting AES192\n\n");
-#elif defined(AES128)
-    printf("\nTesting AES128\n\n");
-#else
-    printf("You need to specify a symbol between AES128, AES192 or AES256. Exiting");
-    return 0;
-#endif
-
-    // exit = test_encrypt_cbc() + test_decrypt_cbc() +
-	// test_encrypt_ctr() + test_decrypt_ctr() +
-	// test_decrypt_ecb() + test_encrypt_ecb();
-    // test_encrypt_ecb_verbose();
-    my_test();
-
-    // return exit;
-    return 0;
-}
+//     // exit = test_encrypt_cbc() + test_decrypt_cbc() +
+// 	// test_encrypt_ctr() + test_decrypt_ctr() +
+// 	// test_decrypt_ecb() + test_encrypt_ecb();
+//     // test_encrypt_ecb_verbose();
+//     // return exit;
+//     return 0;
+// }
 
 
 
 // TODO: READ [16 Bytes] of output.dat (나머지는 PKCS7로 패딩) -> ENCRYPT -> SAVE file to [output.dat]
-// AES-256은 128bit(=16byte)크기의 블록 암호화 수행. IV(초기벡터)는 16byte,  KEY는 32byte
+// AES-256은 128bit(=16byte)고정 크기의 블록 암호화 수행. IV(초기벡터)는 16byte,  KEY는 32byte
 // 암호화할 대상 블록과 KEY값은 padding 해서 맞춰야함 (PKCS7_padding) 
-static void my_test(void)
+
+// **TODO: 여기 반환형을 문자열로 해서 save_file 에서 .dat 파일에 저장하도록!!
+extern char* Encrypt_test(char plain[])
 {
     uint8_t i;
+    Person *temp = head->next;
 
-    uint8_t iv[] = {0x65, 0x67, 0x6c, 0x6f, 0x62, 0x61, 0x6c, 0x73, 0x79, 0x73, 0x74, 0x65, 0x6d, 0x6d, 0x0d, 0x0a};
-    char* encrypt_target = "Occaecat veniam magna cupidatat laborum sint aliqua qui laborum duis eu aliquip proident.Occaecat nisi excepteur ulla";
+    uint8_t iv[IV_LEN] = {0x65, 0x67, 0x6c, 0x6f, 0x62, 0x61, 0x6c, 0x73, 0x79, 0x73, 0x74, 0x65, 0x6d, 0x6d, 0x0d, 0x0a};
+    // char* encrypt_target = "Occaecat veniam magna cupidatat laborum sint aliqua qui laborum duis eu aliquip proident.Occaecat nisi excepteur ulla";
+    char* encrypt_target = plain;
     char* key = "eglobalsystemeglobalsystem";
 
     int target_len = strlen(encrypt_target);        // Length of Target
@@ -68,7 +47,7 @@ static void my_test(void)
     for (i=0; i<target_len; i++) {
         printf("%c", encrypt_target[i]);
     }
-    printf("\n\n");
+    printf("\n");
 
     int hex_target_len = target_len;
     if (target_len % 16) {
@@ -84,6 +63,9 @@ static void my_test(void)
 
     uint8_t target_arr[hex_target_len];
     uint8_t key_arr[hex_key_len];
+    uint8_t *encrypted_data = malloc(sizeof(uint8_t) * hex_target_len);
+    // char target_arr[hex_target_len] = malloc(sizeof(char) * hex_target_len);
+    // char key_arr[hex_key_len] = malloc(sizeof(char) * hex_key_len);
 
     // 0으로 초기화
     memset(target_arr, 0, hex_target_len);
@@ -114,17 +96,21 @@ static void my_test(void)
     }
     printf("\n");
     
+
     // Encryption process
     struct AES_ctx ctx;
     AES_init_ctx_iv(&ctx, key_arr, iv);
     AES_CBC_encrypt_buffer(&ctx, target_arr, hex_target_len);
-    printf("\nEncrypted String = \n");
+    printf("\n[Encrypted] String = \n");
     for (i=0; i<hex_target_len; i++) {
         // printf("%02x ", target_arr[i]);
         printf("%.2x ", target_arr[i]);
         // phex(target_arr);
+
+
     }
     printf("\n");
+    encrypted_data = target_arr; 
 
     
     // Decryption process
@@ -132,13 +118,16 @@ static void my_test(void)
     AES_CBC_decrypt_buffer(&ctx, target_arr, hex_target_len);
     size_t actual_data_len = pkcs7_padding_data_length(target_arr, hex_target_len, 16);
 
-    printf("\nDecrypted String = \n");
+    printf("\n[Decrypted] String = \n");
     for (i=0; i<actual_data_len; i++) {
         // printf("%02x ", target_arr[i]);
         printf("%.2x ", target_arr[i]);
         // phex(target_arr);
     }
-    printf("\n");
+    printf("\n---------------------------------------------------------------------\n");
+
+
+    return encrypted_data;
 }
 
 

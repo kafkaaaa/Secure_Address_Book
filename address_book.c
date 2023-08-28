@@ -1,36 +1,18 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-
-// #pragma warning(disable:4996)
-#define MAX 1000
-#define DATA_LEN_LIMIT 20
-#define FILE_NAME_LIMIT 50
-
-void init_address_list();
-void print_list();
-void insert_list();
-void insert_into_list();
-void update_list();
-void delete_list();
-void load_file();
-void save_file();
-
-typedef struct Person {
-    int id; // 중복 레코드 문제로 ID 추가
-    char name[DATA_LEN_LIMIT];
-    char phone[DATA_LEN_LIMIT];
-    char address[DATA_LEN_LIMIT];
-    struct Person *next;
-} Person;
-
-Person *head, *tail, *tmp;
-FILE *fp;
-int person_cnt; // 주소록에 등록된 사람 수
-
+#include "test.h"
+#include "address_book.h"
 
 int main() {
+
+    #if defined(AES256)
+        printf("\nTesting AES256\n\n");
+    #elif defined(AES192)
+        printf("\nTesting AES192\n\n");
+    #elif defined(AES128)
+        printf("\nTesting AES128\n\n");
+    #else
+        printf("You need to specify a symbol between AES128, AES192 or AES256. Exiting");
+        return 0;
+    #endif
 
     int menu;
     init_address_list();
@@ -58,15 +40,10 @@ int main() {
         else if (menu == 2)     insert_into_list();
         else if (menu == 3)     update_list();
         else if (menu == 4)     delete_list();
-        else if (menu == 5) {
-            printf("프로그램을 종료합니다.\n");
-            save_file();
-            break;
-        }
+        else if (menu == 5) {   save_file();    break;  }
         else {
             printf("1~5만 입력해주세요.\n");
         }
-
     }
     return 0;
 }
@@ -101,8 +78,16 @@ void load_file()
         exit(1);
     }
     else if (fp != NULL) {
-        rewind(fp);
         printf("\nFile Open Success !\n\n");
+        rewind(fp);
+
+
+
+        // TODO: output.dat에 저장되어 있는 암호화된 파일을 다시 복호화 하기!
+        // Decrypt
+        // Decryption process
+
+
         while (1) {
             if (feof(fp) != 0) break;
             // fread(temp, sizeof(Person), 1, fp);
@@ -136,29 +121,48 @@ void save_file()
     FILE* fout_p = fopen(FOUT_NAME, "wb");
 
     if (fout_p == NULL) {
-        printf("[%s] 파일 생성에 실패했습니다!\n", FOUT_NAME);
+        printf("\n[%s] 파일 생성에 실패했습니다!\n\n", FOUT_NAME);
         return;
     }
     else {
-        printf("[%s] 파일이 생성되었습니다.\n", FOUT_NAME);
+        printf("\n[%s] 파일이 생성되었습니다.\n\n", FOUT_NAME);
     }
 
-    Person *p = head->next;
+    printf("\n[AES-256, CBC] 암호화 중입니다...\n");
 
+    // 1명씩 암호화해서 저장
+    Person* pp = head->next;
     while (1) {
-        p = p->next;
-        if (p == NULL) break;
-        // text 형태로 저장
-        fprintf(fout_p, "%d,", p->id);
-        fprintf(fout_p, "%s,%s,%s\n", p->name, p->phone, p->address);
+        pp = pp->next;
+        if (pp == NULL) break;
+        char str_tmp[100] = "";
+        // itoa(pp->id, str_tmp, 10);
+        sprintf(str_tmp, "%d", pp->id);         strcat(str_tmp, ",");
+        strcat(str_tmp, pp->name);              strcat(str_tmp, ",");
+        strcat(str_tmp, pp->phone);             strcat(str_tmp, ",");
+        strcat(str_tmp, pp->address);           strcat(str_tmp, "\n");
+        fputs(Encrypt_test(str_tmp), fout_p);
+    }
+    //
+
+
+
+    // Person *p = head->next;
+
+    // while (1) {
+    //     p = p->next;
+    //     if (p == NULL) break;
+    //     // text 형태로 저장
+    //     fprintf(fout_p, "%d,", p->id);
+    //     fprintf(fout_p, "%s,%s,%s\n", p->name, p->phone, p->address);
 
         // binary 형태로 저장 (.dat)
         // fwrite(p, sizeof(Person), 1, fout_p);
-    }
+    // }
 
-    // 마지막 개행문자 제거
-    fseek(fout_p, -1, SEEK_END);
-    fwrite("\0", 1, 1, fout_p);
+    // // 마지막 개행문자 제거
+    // fseek(fout_p, -1, SEEK_END);
+    // fwrite("\0", 1, 1, fout_p);
     
     // // 마지막 개행문자 제거
     // for (i=sizeof(buf); i>=0; i--) {
@@ -198,7 +202,8 @@ void print_list()
         return;
     }
     else {
-        printf("\n전체 주소록을 출력합니다...\n");
+        printf("\n전체 주소록을 출력합니다...\n\n");
+        printf("----------------------------------------------------------------------\n");
         printf("\n<현재 등록된 사람: %d명>\n", person_cnt);
         printf("----------------------------------------------------------------------\n");
         printf("ID\t\t이름\t\t전화번호\t\t주소\n");
@@ -206,7 +211,7 @@ void print_list()
 
         Person* now = head->next->next;
         while (now != NULL) {
-            // printf("%d\t\t%-20s%-20s%-20s\n", now->id, now->name, now->phone, now->address);
+            // printf("%-20d\t\t%-20s%-20s%-20s\n", now->id, now->name, now->phone, now->address);
             printf("%d\t\t%s\t\t%s\t\t%s\n", now->id, now->name, now->phone, now->address);
             now = now->next;
         }
