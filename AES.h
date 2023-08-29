@@ -88,7 +88,5 @@ void AES_CTR_xcrypt_buffer(struct AES_ctx* ctx, uint8_t* buf, size_t length);
 
 #endif // #if defined(CTR) && (CTR == 1)
 
-char* Encrypt_test(char*);
-
 #endif // _AES_H_
 

@@ -3,17 +3,6 @@
 
 int main() {
 
-    #if defined(AES256)
-        printf("\nTesting AES256\n\n");
-    #elif defined(AES192)
-        printf("\nTesting AES192\n\n");
-    #elif defined(AES128)
-        printf("\nTesting AES128\n\n");
-    #else
-        printf("You need to specify a symbol between AES128, AES192 or AES256. Exiting");
-        return 0;
-    #endif
-
     int menu;
     init_address_list();
     srand((unsigned)time(NULL));
@@ -83,11 +72,29 @@ void load_file()
 
 
 
-        // TODO: output.dat에 저장되어 있는 암호화된 파일을 다시 복호화 하기!
-        // Decrypt
-        // Decryption process
+
+        // // TODO: [Decrypt] output 파일에 저장되어 있는 암호화된 데이터 -> 다시 복호화 하기!
+        // printf("파일을 복호화 합니다...\n");
+        // while (1) {
+        //     if (feof(fp) != 0) break;
+        //     uint8_t enc_str[DATA_LEN_LIMIT * 4] = "";
+        //     // 암호화된 바이너리에서 개행문자를 어떻게 식별 ???? 
+        //     // -> 밑에 fread에서 DATA_LEN_LIMIT * 4로 받아오면 다른 사람것 까지 받아버리는 문제가 생김
+        //     fread(enc_str, sizeof(uint8_t), DATA_LEN_LIMIT * 4, fp);
+        //     Decrypt_test(enc_str);
+        //     printf("\n\n[TEST] 복호화 결과 =\n");
+        //     for (int i=0; i<strlen(enc_str); i++) {
+        //         printf("%.2x ", enc_str[i]);
+        //     }
+        //     printf("\n---------------------------------------------------------------------\n");
+
+        //     // TODO: 복호화한 내용 다시 리스트에 넣기 insert_list(???)
+        // }
 
 
+
+
+        // 복호화 하지 않고 읽어오는 코드
         while (1) {
             if (feof(fp) != 0) break;
             // fread(temp, sizeof(Person), 1, fp);
@@ -104,75 +111,78 @@ void load_file()
 }
 
 
-// #define SAVE_MODE_TXT 1
-#define SAVE_MODE_DAT 1
-
-#if defined(SAVE_MODE_TXT)
-    #define FOUT_NAME "output.txt"
-#elif defined(SAVE_MODE_DAT)
-    #define FOUT_NAME "output.dat"
-#endif
-
-
 // 프로그램 종료시 리스트에 있는 Data를 파일로 저장하기
 void save_file()
 {
     int i;
     FILE* fout_p = fopen(FOUT_NAME, "wb");
+    
+    // 테스트 출력
+    FILE* test_output = fopen("output2.dat", "wb");
 
     if (fout_p == NULL) {
         printf("\n[%s] 파일 생성에 실패했습니다!\n\n", FOUT_NAME);
         return;
     }
     else {
-        printf("\n[%s] 파일이 생성되었습니다.\n\n", FOUT_NAME);
+        printf("\n[%s] 파일이 생성되었습니다.\n", FOUT_NAME);
     }
 
-    printf("\n[AES-256, CBC] 암호화 중입니다...\n");
-
-    // 1명씩 암호화해서 저장
-    Person* pp = head->next;
-    while (1) {
-        pp = pp->next;
-        if (pp == NULL) break;
-        char str_tmp[100] = "";
-        // itoa(pp->id, str_tmp, 10);
-        sprintf(str_tmp, "%d", pp->id);         strcat(str_tmp, ",");
-        strcat(str_tmp, pp->name);              strcat(str_tmp, ",");
-        strcat(str_tmp, pp->phone);             strcat(str_tmp, ",");
-        strcat(str_tmp, pp->address);           strcat(str_tmp, "\n");
-        fputs(Encrypt_test(str_tmp), fout_p);
-    }
-    //
+    printf("[AES-256] [MDOE= CBC] [Padding= PKCS7] 암호화를 시작합니다...\n");
+    printf("---------------------------------------------------------------------\n");
 
 
 
-    // Person *p = head->next;
-
+    // // TODO: 1명씩 암호화해서 저장
+    // Person* pp = head->next;
     // while (1) {
-    //     p = p->next;
-    //     if (p == NULL) break;
-    //     // text 형태로 저장
-    //     fprintf(fout_p, "%d,", p->id);
-    //     fprintf(fout_p, "%s,%s,%s\n", p->name, p->phone, p->address);
+    //     pp = pp->next;
+    //     if (pp == NULL) break;
 
-        // binary 형태로 저장 (.dat)
-        // fwrite(p, sizeof(Person), 1, fout_p);
+    //     uint8_t str_tmp[DATA_LEN_LIMIT * 4] = "";
+    //     sprintf(str_tmp, "%d", pp->id);         strcat(str_tmp, ",");
+    //     strcat(str_tmp, pp->name);              strcat(str_tmp, ",");
+    //     strcat(str_tmp, pp->phone);             strcat(str_tmp, ",");
+    //     strcat(str_tmp, pp->address);           strcat(str_tmp, "\n");
+
+    //     Encrypt_test(str_tmp);
+    //     // printf("\n[TEST 암호화 결과] = \n");
+    //     // for (int i=0; i<strlen(str_tmp); i++) {
+    //     //     printf("%.2x ", str_tmp[i]);
+    //     // }
+    //     printf("\n---------------------------------------------------------------------\n");
+    //     fwrite(str_tmp, sizeof(uint8_t), DATA_LEN_LIMIT * 4, test_output);
+
+    //     // fputs(Encrypt_test(str_tmp), fout_p);
     // }
-
-    // // 마지막 개행문자 제거
-    // fseek(fout_p, -1, SEEK_END);
-    // fwrite("\0", 1, 1, fout_p);
     
-    // // 마지막 개행문자 제거
-    // for (i=sizeof(buf); i>=0; i--) {
-    //     if (buf[i-1] == '\n') {
-    //         buf[i-1] = '\0';
-    //         break;
-    //     } 
-    // }
 
-    printf("주소록 저장 성공. 프로그램을 종료합니다.\n");
+
+
+    // 암호화 하지 않고 저장하는 코드
+    Person *p = head->next;
+    while (1) {
+        p = p->next;
+        if (p == NULL) break;
+
+        uint8_t str_tmp[DATA_LEN_LIMIT * 4] = "";
+        sprintf(str_tmp, "%d", p->id);         strcat(str_tmp, ",");
+        strcat(str_tmp, p->name);              strcat(str_tmp, ",");
+        strcat(str_tmp, p->phone);             strcat(str_tmp, ",");
+        strcat(str_tmp, p->address);           strcat(str_tmp, "\n");
+        Encrypt_test(str_tmp);
+        printf("\n---------------------------------------------------------------------\n");
+        fprintf(fout_p, "%d,", p->id);
+        fprintf(fout_p, "%s,%s,%s\n", p->name, p->phone, p->address);
+        // fwrite(p, sizeof(Person), 1, fout_p);
+    }
+    // 마지막 개행문자 제거
+    fseek(fout_p, -1, SEEK_END);
+    fwrite("\0", 1, 1, fout_p);
+
+
+    printf("[%s] 주소록 저장 성공.\n", FOUT_NAME); 
+    printf("프로그램을 종료합니다.\n");
     fclose(fout_p);
 }
 
@@ -202,9 +212,9 @@ void print_list()
         return;
     }
     else {
-        printf("\n전체 주소록을 출력합니다...\n\n");
+        printf("\n전체 주소록을 출력합니다...\n");
         printf("----------------------------------------------------------------------\n");
-        printf("\n<현재 등록된 사람: %d명>\n", person_cnt);
+        printf("<현재 등록된 사람: %d명>\n", person_cnt);
         printf("----------------------------------------------------------------------\n");
         printf("ID\t\t이름\t\t전화번호\t\t주소\n");
         printf("----------------------------------------------------------------------\n");
@@ -308,12 +318,12 @@ void update_list()
     }
 
     int id, update_option;
-    char name[20] = {0};
-    char new_name[20] = {0};
-    char phone[20] = {0};
-    char new_phone[20] = {0};
-    char address[100] = {0};
-    char new_address[100] = {0};
+    uint8_t name[DATA_LEN_LIMIT] = {0};
+    uint8_t new_name[DATA_LEN_LIMIT] = {0};
+    uint8_t phone[DATA_LEN_LIMIT] = {0};
+    uint8_t new_phone[DATA_LEN_LIMIT] = {0};
+    uint8_t address[DATA_LEN_LIMIT] = {0};
+    uint8_t new_address[DATA_LEN_LIMIT] = {0};
 
     printf("----주소록을 수정합니다----\n");
     while (1) {
@@ -454,9 +464,9 @@ void delete_list()
     }
 
     int id, del_option;
-    char name[DATA_LEN_LIMIT] = "";
-    char phone[DATA_LEN_LIMIT] = "";
-    char address[DATA_LEN_LIMIT] = "";
+    uint8_t name[DATA_LEN_LIMIT] = "";
+    uint8_t phone[DATA_LEN_LIMIT] = "";
+    uint8_t address[DATA_LEN_LIMIT] = "";
     Person *prev = NULL, *temp = head;
     
     // printf("\n삭제할 데이터를 선택하세요.\n");

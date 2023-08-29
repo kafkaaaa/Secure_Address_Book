@@ -24,12 +24,22 @@
 #define FILE_NAME_LIMIT 50
 #endif
 
+// #define SAVE_MODE_TXT 1
+#define SAVE_MODE_DAT 1
+
+#if defined(SAVE_MODE_TXT)
+    // #define FOUT_NAME "output.txt"
+    #define FOUT_NAME "output2.txt"
+#elif defined(SAVE_MODE_DAT)
+    #define FOUT_NAME "output.dat"
+#endif
+
 // 구조체 정의
 typedef struct Person {
     int id; // 중복 레코드 문제로 ID 추가
-    char name[DATA_LEN_LIMIT];
-    char phone[DATA_LEN_LIMIT];
-    char address[DATA_LEN_LIMIT];
+    uint8_t name[DATA_LEN_LIMIT];
+    uint8_t phone[DATA_LEN_LIMIT];
+    uint8_t address[DATA_LEN_LIMIT];
     struct Person *next;
 } Person;
 
@@ -49,3 +59,4 @@ void load_file();
 void save_file();
 
 #endif
+
