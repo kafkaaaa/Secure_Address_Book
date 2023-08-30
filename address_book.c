@@ -20,9 +20,6 @@ int main() {
         if (menu > 5 || menu < 1) {
             printf("잘못된 입력입니다. 다시 시도해주세요.\n");
         }
-        // if (scanf_s("%d", &menu, sizeof(int)) == 0 ) {
-        //     printf("잘못된 입력입니다. 다시 시도해주세요.\n");
-        // }
         getchar();
 
         if      (menu == 1)     print_list();
@@ -71,33 +68,30 @@ void load_file()
         rewind(fp);
 
 
-
-
+        // int cnt = 0;
         // // TODO: [Decrypt] output 파일에 저장되어 있는 암호화된 데이터 -> 다시 복호화 하기!
-        // printf("파일을 복호화 합니다...\n");
+        // printf("파일을 복호화 합니다...\n\n");
         // while (1) {
         //     if (feof(fp) != 0) break;
-        //     uint8_t enc_str[DATA_LEN_LIMIT * 4] = "";
-        //     // 암호화된 바이너리에서 개행문자를 어떻게 식별 ???? 
-        //     // -> 밑에 fread에서 DATA_LEN_LIMIT * 4로 받아오면 다른 사람것 까지 받아버리는 문제가 생김
-        //     fread(enc_str, sizeof(uint8_t), DATA_LEN_LIMIT * 4, fp);
-        //     Decrypt_test(enc_str);
-        //     printf("\n\n[TEST] 복호화 결과 =\n");
-        //     for (int i=0; i<strlen(enc_str); i++) {
-        //         printf("%.2x ", enc_str[i]);
-        //     }
-        //     printf("\n---------------------------------------------------------------------\n");
+
+        //     uint8_t str_tmp[256];
+        //     fgets(str_tmp, sizeof(str_tmp), fp);  // 암호화된 주소록 파일에서 1줄 읽어들이기
+        //     printf("[#%d]: %s\n", ++cnt, str_tmp);
+
+        //     Decrypt_test(str_tmp);
+        //     printf("---------------------------------------------------------------------\n");
 
         //     // TODO: 복호화한 내용 다시 리스트에 넣기 insert_list(???)
+        //     // #1. (Person*)temp 에 각각 값 넣기
+        //     // #2. insert_list 하기
         // }
+        // printf("\n");
 
 
 
-
-        // 복호화 하지 않고 읽어오는 코드
+        // **암호화되지 않은 파일 읽어오는 코드
         while (1) {
             if (feof(fp) != 0) break;
-            // fread(temp, sizeof(Person), 1, fp);
             fscanf(fp, "%d, %[^,], %[^,], %[^\n]", &(temp->id), temp->name, temp->phone, temp->address);
             printf("[%d]번째 데이터 읽어오기 성공\n", person_cnt+1);
             insert_list(temp);
@@ -117,9 +111,6 @@ void save_file()
     int i;
     FILE* fout_p = fopen(FOUT_NAME, "wb");
     
-    // 테스트 출력
-    FILE* test_output = fopen("output2.dat", "wb");
-
     if (fout_p == NULL) {
         printf("\n[%s] 파일 생성에 실패했습니다!\n\n", FOUT_NAME);
         return;
@@ -131,50 +122,51 @@ void save_file()
     printf("[AES-256] [MDOE= CBC] [Padding= PKCS7] 암호화를 시작합니다...\n");
     printf("---------------------------------------------------------------------\n");
 
-
-
-    // // TODO: 1명씩 암호화해서 저장
+    // // 1명씩 암호화해서 저장
     // Person* pp = head->next;
     // while (1) {
     //     pp = pp->next;
     //     if (pp == NULL) break;
 
-    //     uint8_t str_tmp[DATA_LEN_LIMIT * 4] = "";
+    //     uint8_t str_tmp[100] = "";
     //     sprintf(str_tmp, "%d", pp->id);         strcat(str_tmp, ",");
     //     strcat(str_tmp, pp->name);              strcat(str_tmp, ",");
     //     strcat(str_tmp, pp->phone);             strcat(str_tmp, ",");
     //     strcat(str_tmp, pp->address);           strcat(str_tmp, "\n");
 
-    //     Encrypt_test(str_tmp);
-    //     // printf("\n[TEST 암호화 결과] = \n");
-    //     // for (int i=0; i<strlen(str_tmp); i++) {
-    //     //     printf("%.2x ", str_tmp[i]);
-    //     // }
+    //     int len = Encrypt_test(str_tmp);
+    //     for (int i=0; i<len; i++) {
+    //         fprintf(fout_p, "%.2x", str_tmp[i]);
+    //     }
+    //     putc('\n', fout_p);
     //     printf("\n---------------------------------------------------------------------\n");
-    //     fwrite(str_tmp, sizeof(uint8_t), DATA_LEN_LIMIT * 4, test_output);
-
+    //     // fwrite(str_tmp, sizeof(uint8_t), DATA_LEN_LIMIT * 4, fout_p);
+    //     // fwrite(str_tmp, sizeof(uint8_t), len, fout_p);
     //     // fputs(Encrypt_test(str_tmp), fout_p);
     // }
+    // // 마지막 개행문자 제거
+    // fseek(fout_p, -1, SEEK_END);
+    // fwrite("\0", 1, 1, fout_p);
     
 
 
-
-    // 암호화 하지 않고 저장하는 코드
+    // **
     Person *p = head->next;
     while (1) {
         p = p->next;
         if (p == NULL) break;
 
-        uint8_t str_tmp[DATA_LEN_LIMIT * 4] = "";
+        uint8_t str_tmp[100] = "";
         sprintf(str_tmp, "%d", p->id);         strcat(str_tmp, ",");
         strcat(str_tmp, p->name);              strcat(str_tmp, ",");
         strcat(str_tmp, p->phone);             strcat(str_tmp, ",");
         strcat(str_tmp, p->address);           strcat(str_tmp, "\n");
-        Encrypt_test(str_tmp);
+
+        Encrypt_test(str_tmp);  // 암/복호화 테스트만 수행
         printf("\n---------------------------------------------------------------------\n");
         fprintf(fout_p, "%d,", p->id);
         fprintf(fout_p, "%s,%s,%s\n", p->name, p->phone, p->address);
-        // fwrite(p, sizeof(Person), 1, fout_p);
+        // fwrite(str_tmp, sizeof(str_tmp), 1, fout_p);
     }
     // 마지막 개행문자 제거
     fseek(fout_p, -1, SEEK_END);

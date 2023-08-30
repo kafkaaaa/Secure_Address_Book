@@ -28,8 +28,7 @@
 #define SAVE_MODE_DAT 1
 
 #if defined(SAVE_MODE_TXT)
-    // #define FOUT_NAME "output.txt"
-    #define FOUT_NAME "output2.txt"
+    #define FOUT_NAME "output.txt"
 #elif defined(SAVE_MODE_DAT)
     #define FOUT_NAME "output.dat"
 #endif

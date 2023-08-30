@@ -27,23 +27,19 @@ char* key = "eglobalsystemeglobalsystem";
 // }
 
 
-// TODO: READ [16 Bytes] of output.dat (나머지는 PKCS7로 패딩) -> ENCRYPT -> SAVE file to [output.dat]
+
 // AES-256은 128bit(=16byte)고정 크기의 블록 암호화 수행.  IV=128bit(=16byte),  KEY=256bit(=32byte)
 // 암호화할 평문 블록과 KEY값은 padding 해서 길이를 맞춰야함. (PKCS7) 
-extern void Encrypt_test(uint8_t plain[])
+extern int Encrypt_test(uint8_t plain[])
 {
-    printf("----------암호화 테스트 시작----------\n");
-
+    // printf("-------암호화 테스트 시작-------\n");
     uint8_t i;
-    Person *temp = head->next;
 
-    // int plain_len = strlen(plain_text);     // Length of Plain Text
-    int plain_len = strlen(plain);     // Length of Plain Text
+    int plain_len = strlen(plain);          // Length of Plain Text
     int key_len = strlen(key);              // Length of Key
 
     printf("[Plain Text] = ");
     for (i=0; i<plain_len; i++) {
-        // printf("%c", plain_text[i]);
         printf("%c", plain[i]);
     }
     printf("\n");
@@ -62,14 +58,12 @@ extern void Encrypt_test(uint8_t plain[])
 
     uint8_t plain_arr[hex_plain_len];
     uint8_t key_arr[hex_key_len];
-    // uint8_t *encrypted_data = malloc(sizeof(uint8_t) * hex_plain_len);
 
     // 0으로 초기화
     memset(plain_arr, 0, hex_plain_len);
     memset(key_arr, 0, hex_key_len);
 
     for (i=0; i<plain_len; i++) {
-        // plain_arr[i] = (uint8_t)plain_text[i];
         plain_arr[i] = (uint8_t)plain[i];
     }
 
@@ -79,8 +73,10 @@ extern void Encrypt_test(uint8_t plain[])
 
     // ** padding with PKCS7 **
     // pkcs7_padding_pad_buffer -> returns the number of paddings it added
-    int target_pad_num = pkcs7_padding_pad_buffer(plain_arr, plain_len, sizeof(plain_arr), 16);
-    int key_pad_num = pkcs7_padding_pad_buffer(key_arr, key_len, sizeof(key_arr), 16);
+    pkcs7_padding_pad_buffer(plain_arr, plain_len, sizeof(plain_arr), 16);
+    pkcs7_padding_pad_buffer(key_arr, key_len, sizeof(key_arr), 16);
+    // int target_add_num = pkcs7_padding_pad_buffer(plain_arr, plain_len, sizeof(plain_arr), 16);
+    // int key_add_num = pkcs7_padding_pad_buffer(key_arr, key_len, sizeof(key_arr), 16);
 
     printf("\nThe padded Plain Text (HEX) is...\n");
     for (i=0; i<hex_plain_len; i++) {
@@ -98,69 +94,73 @@ extern void Encrypt_test(uint8_t plain[])
     // ** Encryption Process **
     struct AES_ctx ctx;
     AES_init_ctx_iv(&ctx, key_arr, iv);
-    // AES_CBC_encrypt_buffer(&ctx, plain_arr, hex_plain_len);
     AES_CBC_encrypt_buffer(&ctx, plain, hex_plain_len);
     printf("\n[Encrypted] String = \n");
-    for (i=0; i<hex_plain_len; i++) {
-        // printf("%.2x ", plain_arr[i]);
+    for (i=0; i<hex_plain_len; i++){
         printf("%.2x ", plain[i]);
     }
     printf("\n");
-    // encrypted_data = plain_arr; 
 
-    
-    // // ** Decryption Process **
-    // AES_ctx_set_iv(&ctx, iv);   // reset iv
-    // // AES_CBC_decrypt_buffer(&ctx, plain_arr, hex_plain_len);
-    // AES_CBC_decrypt_buffer(&ctx, plain, hex_plain_len);
-    // size_t actual_data_len = pkcs7_padding_data_length(plain_arr, hex_plain_len, 16);
-
-    // printf("\n[Decrypted] String = \n");
-    // for (i=0; i<actual_data_len; i++) {
-    //     // printf("%.2x ", plain_arr[i]);
-    //     printf("%.2x ", plain[i]);
-    // }
-
-    printf("----------암호화 테스트 완료----------\n");
-    // return encrypted_data;
-}
-
-
-
-extern void Decrypt_test(uint8_t encrypted[])
-{
-    printf("----------복호화 테스트 시작----------\n");
-    uint8_t i;
-
-    int encrypted_len = strlen(encrypted);
-    int hex_enc_len = encrypted_len;
-    if (encrypted_len % 16) {
-        hex_enc_len += 16 - (encrypted_len % 16);   // 길이를 16의 배수로 맞춤
-    }
 
     // ** Decryption Process **
-    struct AES_ctx ctx;
-    AES_init_ctx_iv(&ctx, key, iv);
-    AES_ctx_set_iv(&ctx, iv);
-    // AES_init_ctx_iv(&ctx, key, iv);
-    // AES_CBC_decrypt_buffer(&ctx, encrypted_data, hex_target_len);
-    AES_CBC_decrypt_buffer(&ctx, encrypted, hex_enc_len);
-
-
-    // size_t actual_data_len = pkcs7_padding_data_length(encrypted_data, hex_target_len, 16);
-    size_t actual_data_len = pkcs7_padding_data_length(encrypted, hex_enc_len, 16);
-    uint8_t *decrypted_data = malloc(sizeof(actual_data_len) * actual_data_len);
-
+    AES_ctx_set_iv(&ctx, iv);   // reset iv
+    AES_CBC_decrypt_buffer(&ctx, plain, hex_plain_len);
+    size_t actual_data_len = pkcs7_padding_data_length(plain_arr, hex_plain_len, 16);
 
     printf("\n[Decrypted] String = \n");
-    // phex(encrypted);
     for (i=0; i<actual_data_len; i++) {
-        printf("%.2x ", encrypted[i]);
+        printf("%.2x ", plain[i]);
     }
-    printf("----------복호화 테스트 완료----------\n");
 
-    // return decrypted_data;
+    // return encrypted_data;
+    return hex_plain_len;
 }
+
+
+
+// extern void Decrypt_test(uint8_t encrypted[])
+// {
+//     uint8_t i;
+
+//     int key_len = strlen(key);      // Length of Key
+//     int hex_key_len = key_len;
+//     int enc_len = strlen(encrypted);
+
+//     if (key_len % 16) {
+//         hex_key_len += 16 - (key_len % 16);     // 길이를 16의 배수로 맞춤
+//     }
+//     uint8_t key_arr[hex_key_len];
+//     memset(key_arr, 0, hex_key_len);
+//     for (i=0; i<key_len; i++) {
+//         key_arr[i] = (uint8_t)key[i];
+//     }
+
+//     pkcs7_padding_pad_buffer(key_arr, key_len, sizeof(key_arr), 16);
+
+//     // ** Decryption Process **
+//     struct AES_ctx ctx;
+//     AES_init_ctx_iv(&ctx, key_arr, iv);
+//     AES_ctx_set_iv(&ctx, iv);
+//     AES_CBC_decrypt_buffer(&ctx, encrypted, enc_len);
+
+
+//     size_t actual_data_len = pkcs7_padding_data_length(encrypted, enc_len, 16); // 문제
+
+
+//     printf("[Decrypted] String = \n");
+//     // printf("%s\n", encrypted);
+
+//     // for (i=0; i<actual_data_len; i++) {
+//     //     printf("%.2x ", encrypted[i]);
+//     // }
+//     // printf("\n");
+
+//     uint8_t buf[actual_data_len];
+//     for (i=0; i<actual_data_len; i++) {
+//         printf("%.2x ", encrypted[i]);
+//     }
+//     printf("\n");
+// }
 
 
 
