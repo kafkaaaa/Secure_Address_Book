@@ -18,6 +18,12 @@
 #include "time.h"
 #include "pkcs7_padding.h"
 
+#ifndef IV_LEN
+#define IV_LEN 16
+#endif
+
+uint8_t iv[IV_LEN];
+char* key;
 
 static void phex(uint8_t* str);
 static int test_encrypt_cbc(void);
@@ -30,7 +36,6 @@ static void test_encrypt_ecb_verbose(void);
 extern int Encrypt_test(uint8_t[]);
 extern void Decrypt_test(uint8_t[]);
 
-#define IV_LEN 16
 
 #endif
 
