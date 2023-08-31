@@ -64,38 +64,52 @@ void load_file()
         exit(1);
     }
     else if (fp != NULL) {
-        printf("\nFile Open Success !\n\n");
+        printf("\nFile Open Success !\n");
         rewind(fp);
 
 
-        // int cnt = 0;
-        // // TODO: [Decrypt] output 파일에 저장되어 있는 암호화된 데이터 -> 다시 복호화 하기!
-        // printf("파일을 복호화 합니다...\n\n");
-        // while (1) {
-        //     if (feof(fp) != 0) break;
 
-        //     uint8_t str_tmp[256];
-        //     fgets(str_tmp, sizeof(str_tmp), fp);  // 암호화된 주소록 파일에서 1줄 읽어들이기
-        //     printf("[#%d]: %s\n", ++cnt, str_tmp);
-
-        //     Decrypt_test(str_tmp);
-        //     printf("---------------------------------------------------------------------\n");
-
-        //     // TODO: 복호화한 내용 다시 리스트에 넣기 insert_list(???)
-        //     // #1. (Person*)temp 에 각각 값 넣기
-        //     // #2. insert_list 하기
-        // }
-        // printf("\n");
-
-
-
-        // **암호화되지 않은 파일 읽어오는 코드
+        // *암호화된 파일 복호화해서 읽어오는 코드
+        // TODO: [Decrypt] output 파일에 저장되어 있는 암호화된 데이터 -> 다시 복호화 하기!
+        int cnt = 1;
+        printf("\n[%s] 파일을 복호화 합니다...", file_name);
+        printf("\n---------------------------------------------------------------------\n");
         while (1) {
             if (feof(fp) != 0) break;
-            fscanf(fp, "%d, %[^,], %[^,], %[^\n]", &(temp->id), temp->name, temp->phone, temp->address);
-            printf("[%d]번째 데이터 읽어오기 성공\n", person_cnt+1);
-            insert_list(temp);
+
+            uint8_t enc_str[257] = "";
+            fgets(enc_str, sizeof(enc_str), fp);  // 암호화된 주소록 파일에서 1줄 읽어들이기
+            
+            // 마지막 개행문자 제거
+            enc_str[strlen(enc_str) - 1] = '\0';
+
+            printf("[#%d]\n%s", cnt++, enc_str);
+            Decrypt_test(enc_str);
+
+            // TODO: 복호화 후 내용 테스트
+            printf("\n---------------------------------------------------------------------\n");
+
+            // TODO: 복호화한 내용 다시 리스트에 넣기 insert_list(???)
+            // #1. (Person*)temp 에 각각 값 넣기
+            // #2. insert_list 하기
         }
+        printf("\n");
+        // *
+
+
+
+
+        // // **암호화되지 않은 파일 읽어오는 코드
+        // while (1) {
+        //     if (feof(fp) != 0) break;
+        //     fscanf(fp, "%d, %[^,], %[^,], %[^\n]", &(temp->id), temp->name, temp->phone, temp->address);
+        //     printf("[%d]번째 데이터 읽어오기 성공\n", person_cnt+1);
+        //     insert_list(temp);
+        // }
+        // // **
+
+
+
     }
     else {
         printf("File Open Error !\n\n");
@@ -110,6 +124,7 @@ void save_file()
 {
     int i;
     FILE* fout_p = fopen(FOUT_NAME, "wb");
+    // FILE* fout_p = fopen(FOUT_NAME, "wt");
     
     if (fout_p == NULL) {
         printf("\n[%s] 파일 생성에 실패했습니다!\n\n", FOUT_NAME);
@@ -150,30 +165,48 @@ void save_file()
     
 
 
-    // **
+    // **1명씩 암호화 해서 저장
     Person *p = head->next;
     while (1) {
         p = p->next;
         if (p == NULL) break;
 
         uint8_t str_tmp[100] = "";
+        uint8_t result[100] = "";
         sprintf(str_tmp, "%d", p->id);         strcat(str_tmp, ",");
         strcat(str_tmp, p->name);              strcat(str_tmp, ",");
         strcat(str_tmp, p->phone);             strcat(str_tmp, ",");
         strcat(str_tmp, p->address);           strcat(str_tmp, "\n");
 
-        Encrypt_test(str_tmp);  // 암/복호화 테스트만 수행
-        printf("\n---------------------------------------------------------------------\n");
-        fprintf(fout_p, "%d,", p->id);
-        fprintf(fout_p, "%s,%s,%s\n", p->name, p->phone, p->address);
+        // Encrypt_test(str_tmp);  // 암/복호화 테스트만 수행
+        // printf("\n---------------------------------------------------------------------\n");
+        // fprintf(fout_p, "%d,", p->id);
+        // fprintf(fout_p, "%s,%s,%s\n", p->name, p->phone, p->address);
         // fwrite(str_tmp, sizeof(str_tmp), 1, fout_p);
+
+        Encrypt_test(str_tmp, result);  // Encrypt file
+        int len = (int)strlen(result);
+        // fputs(result, fout_p);
+        // fwrite(result, sizeof(uint8_t), len+1, fout_p);
+        for (int i=0; i<len; i++) {
+            fprintf(fout_p, "%02x", result[i]);    // ******한 칸씩 띄워서 저장?
+        }
+        fputc('\n', fout_p);
+
+        // Test Code
+        printf("\n[TEST] [%s]\n", FOUT_NAME);
+        for (int i=0; i<len; i++) {
+            printf("%02x ", result[i]);
+        }
+        printf("\n");
+
     }
+
     // 마지막 개행문자 제거
     fseek(fout_p, -1, SEEK_END);
     fwrite("\0", 1, 1, fout_p);
 
-
-    printf("[%s] 주소록 저장 성공.\n", FOUT_NAME); 
+    printf("\n[%s] 주소록 저장 성공.\n", FOUT_NAME); 
     printf("프로그램을 종료합니다.\n");
     fclose(fout_p);
 }

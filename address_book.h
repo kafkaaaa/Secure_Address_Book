@@ -30,7 +30,7 @@
 #if defined(SAVE_MODE_TXT)
     #define FOUT_NAME "output.txt"
 #elif defined(SAVE_MODE_DAT)
-    #define FOUT_NAME "output.dat"
+    #define FOUT_NAME "output.bin"
 #endif
 
 // 구조체 정의

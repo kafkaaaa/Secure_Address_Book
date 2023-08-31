@@ -33,7 +33,7 @@ static int test_decrypt_ctr(void);
 static int test_encrypt_ecb(void);
 static int test_decrypt_ecb(void);
 static void test_encrypt_ecb_verbose(void);
-extern int Encrypt_test(uint8_t[]);
+extern void Encrypt_test(uint8_t[], uint8_t[]);
 extern void Decrypt_test(uint8_t[]);
 
 
