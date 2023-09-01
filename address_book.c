@@ -92,13 +92,16 @@ void load_file()
             Decrypt_test(enc_str, result);
             
             // TODO: 복호화 후 내용 테스트
-            printf("[TEST] enc_str[] = \n");
+            printf("[TEST] 복호화된 내용 = \n");
             printf("%s", result);
             printf("\n---------------------------------------------------------------------\n");
 
             // TODO: 복호화한 내용 다시 리스트에 넣기 insert_list(???)
             // #1. (Person*)temp 에 각각 값 넣기
+            sscanf(result, "%d, %[^,], %[^,], %[^\n]", &(temp->id), temp->name, temp->phone, temp->address);
+            printf("[%d]번째 데이터 읽어오기 성공\n", person_cnt+1);
             // #2. insert_list 하기
+            insert_list(temp);
         }
         printf("\n");
         // *

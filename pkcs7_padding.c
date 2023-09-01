@@ -41,7 +41,7 @@ size_t pkcs7_padding_data_length( uint8_t * buffer, size_t buffer_size, uint8_t 
     return buffer_size;
   }
   /* buffer must be at least padding_value + 1 in size */
-  if( buffer_size < padding_value + 1 ){
+  if( (uint8_t)buffer_size < padding_value + 1 ){
     return 0;
   }
   uint8_t count = 1;
