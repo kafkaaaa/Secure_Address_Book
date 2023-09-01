@@ -77,16 +77,23 @@ void load_file()
         while (1) {
             if (feof(fp) != 0) break;
 
-            uint8_t enc_str[257] = "";
+            uint8_t enc_str[256] = "";
+            uint8_t result[256] = "";
             fgets(enc_str, sizeof(enc_str), fp);  // 암호화된 주소록 파일에서 1줄 읽어들이기
-            
+            int len = strlen(enc_str);
+            // uint8_t* result = (uint8_t*) malloc(sizeof(uint8_t) * len);
+
             // 마지막 개행문자 제거
-            enc_str[strlen(enc_str) - 1] = '\0';
+            if (enc_str[len - 1] == '\n') {
+                enc_str[len - 1] = '\0';
+            }
 
             printf("[#%d]\n%s", cnt++, enc_str);
-            Decrypt_test(enc_str);
-
+            Decrypt_test(enc_str, result);
+            
             // TODO: 복호화 후 내용 테스트
+            printf("[TEST] enc_str[] = \n");
+            printf("%s", result);
             printf("\n---------------------------------------------------------------------\n");
 
             // TODO: 복호화한 내용 다시 리스트에 넣기 insert_list(???)

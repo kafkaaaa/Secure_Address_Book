@@ -123,7 +123,7 @@ extern void Encrypt_test(uint8_t plain[], uint8_t result[])
 }
 
 
-extern void Decrypt_test(uint8_t encrypted[])
+extern void Decrypt_test(uint8_t encrypted[], uint8_t result[])
 {
     uint8_t i;
 
@@ -181,14 +181,25 @@ extern void Decrypt_test(uint8_t encrypted[])
 
 
 
-    printf("[Decrypted] String = ");
+    printf("[Decrypted] hex = ");
     for (i=0; i<actual_data_len; i++) {
         if (i % 16 == 0) printf("\n");
-        // printf("%02x ", encrypted[i]);
         printf("%02x ", dec_res[i]);
+    }
+    printf("\n\n");
+
+
+    printf("[Decrypted] string = ");
+    for (i=0; i<actual_data_len; i++) {
+        // printf("%02x ", encrypted[i]);
+        printf("%c", dec_res[i]);
     }
     printf("\n");
 
+    // strcpy(result, dec_res);
+    memcpy(result, dec_res, actual_data_len);
+
+    // return dec_res;
     // return actual_data_len;
 }
 
