@@ -7,13 +7,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "address_book.h"
-#include "AES.h"
-#include "pkcs7_padding.h"
+// #include "AES.h"
+// #include "pkcs7_padding.h"
 
 // 매크로 정의
 #ifndef MAX
 #define MAX 1000
+#endif
+
+#ifndef PERSON_DATA_LEN 
+#define PERSON_DATA_LEN 70      /* 사람 1명의 데이터 크기 고정 */
 #endif
 
 #ifndef DATA_LEN_LIMIT
@@ -25,17 +28,17 @@
 #endif
 
 // #define SAVE_MODE_TXT 1
-#define SAVE_MODE_DAT 1
+#define SAVE_MODE_BIN 1
 
 #if defined(SAVE_MODE_TXT)
     #define FOUT_NAME "output.txt"
-#elif defined(SAVE_MODE_DAT)
-    #define FOUT_NAME "output.bin"
+#elif defined(SAVE_MODE_BIN)
+    #define FOUT_NAME "output8.bin"
 #endif
 
 // 구조체 정의
 typedef struct Person {
-    int id; // 중복 레코드 문제로 ID 추가
+    int id;
     uint8_t name[DATA_LEN_LIMIT];
     uint8_t phone[DATA_LEN_LIMIT];
     uint8_t address[DATA_LEN_LIMIT];
@@ -48,6 +51,7 @@ FILE *fp;
 int person_cnt; // 주소록에 등록된 사람 수
 
 // 함수 선언
+void clear_buffer();
 void init_address_list();
 void print_list();
 void insert_list();
