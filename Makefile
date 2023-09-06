@@ -3,13 +3,13 @@ CFLAGS = -W
 LDLIBS = libmyAES.so
 OBJS = AES.o pkcs7_padding.o address_book.o test.o
 SRCS = AES.c pkcs7_padding.c address_book.c test.c
-TARGET = libmyAES.so test5
+TARGET = libmyAES.so addr_book
 LIBDIR = /usr/local/lib/
 
 all : $(TARGET)
 
-test5 : AES.o pkcs7_padding.o address_book.o test.o libmyAES.so
-	$(CC) -o test5 AES.o pkcs7_padding.o address_book.o test.o
+addr_book : AES.o pkcs7_padding.o address_book.o test.o libmyAES.so
+	$(CC) -o addr_book AES.o pkcs7_padding.o address_book.o test.o
 
 libmyAES.so : AES.c AES.h
 	$(CC) -fPIC -c AES.c
