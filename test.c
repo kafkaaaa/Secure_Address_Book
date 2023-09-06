@@ -74,7 +74,7 @@ size_t Encrypt_test(uint8_t plain[], uint8_t result[])
     struct AES_ctx ctx;
     AES_init_ctx_iv(&ctx, padded_key, iv);
     AES_CBC_encrypt_buffer(&ctx, padded_plain, hex_plain_len);
-    printf("\n[Encrypted] String = ");
+    printf("\n[Encrypted] String is... ");
     for (i=0; i<hex_plain_len; i++) {
         if (i % 16 == 0) puts("");
         result[i] = padded_plain[i];
@@ -83,20 +83,6 @@ size_t Encrypt_test(uint8_t plain[], uint8_t result[])
     puts("");
 
     return hex_plain_len;
-
-
-    // // ** Decryption Test **
-    // AES_ctx_set_iv(&ctx, iv);   // reset iv
-    // AES_CBC_decrypt_buffer(&ctx, padded_plain, hex_plain_len);
-    // size_t actual_data_len = pkcs7_padding_data_length(padded_plain, hex_plain_len, AES_BLOCKLEN);
-
-    // printf("\n[Decrypted] String = ");
-    // for (i=0; i<actual_data_len; i++) {
-    //     if (i % 16 == 0) puts("");
-    //     result[i] = padded_plain[i];
-    //     printf("%02x ", padded_plain[i]);
-    // }
-    // puts("");
 }
 
 
@@ -106,7 +92,6 @@ size_t Encrypt_test(uint8_t plain[], uint8_t result[])
 void Decrypt_test(uint8_t len, uint8_t encrypted[], uint8_t result[])
 {
     size_t i;
-    // size_t enc_len = strlen(encrypted);
     size_t enc_len = len;
     size_t key_len = strlen(key);
         // Test code

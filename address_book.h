@@ -7,8 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-// #include "AES.h"
-// #include "pkcs7_padding.h"
 
 // 매크로 정의
 #ifndef MAX
@@ -33,7 +31,7 @@
 #if defined(SAVE_MODE_TXT)
     #define FOUT_NAME "output.txt"
 #elif defined(SAVE_MODE_BIN)
-    #define FOUT_NAME "output8.bin"
+    #define FOUT_NAME "output.bin"
 #endif
 
 // 구조체 정의

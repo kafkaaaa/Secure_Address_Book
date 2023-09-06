@@ -35,11 +35,9 @@ int main() {
 }
 
 
-
 void clear_buffer() {
     while (getchar() != '\n');
 }
-
 
 
 // 파일로부터 주소록 데이터 자동 불러오기
@@ -74,9 +72,7 @@ void load_file()
         printf("\n[%s] 파일을 복호화 합니다...", file_name);
         printf("\n---------------------------------------------------------------------\n");
 
-
-
-        // TODO: binary로 저장된 output 파일 복호화
+        /* binary로 저장된 output 파일 복호화 */
         while (1) {
             uint8_t len = PERSON_DATA_LEN;
             if (len % 16 != 0) {
@@ -87,171 +83,16 @@ void load_file()
             fread(enc_tmp, sizeof(uint8_t), len, fp);
             if (feof(fp) != 0) break;
 
-            // size_t enc_len = strlen(enc_tmp);
-                // // Test code
-                // printf("enc_len= %zd\n", enc_len);
-                // for (i=0; i<len; i++) {
-                //     if (i % 16 == 0) puts("");
-                //     printf("%02x ", enc_tmp[i]);
-                // }
-                // puts("");
-            // uint8_t enc[enc_len];
-            // memcpy(enc, enc_tmp, enc_len);  // 0 제거
-
-                // // Test code
-                // printf("[TEST] 복호화 대상= ");
-                // for (i=0; i<enc_len; i++) {
-                //     if (i % 16 == 0) puts("");
-                //     printf("%02x ", enc[i]);
-                // }
-                // puts("");
-
-            // Decrypt_test(enc, result);
             Decrypt_test(len, enc_tmp, result);
-            // uint8_t res_len = strlen(result);
-
-            //     // Test code
-            //     printf("\n[TEST] 복호화 결과= ");
-            //     for (i=0; i<res_len; i++) {
-            //         if (i % 16 == 0) puts("");
-            //         printf("%02x ", result[i]);
-            //     }
-            //     puts("");
-
-
 
             // 복호화한 내용 다시 리스트에 넣기
             sscanf(result, "%d, %[^,], %[^,], %[^\n]", &(temp->id), temp->name, temp->phone, temp->address);
             printf("[%d]번째 데이터 읽어오기 성공", person_cnt+1);
             printf("\n---------------------------------------------------------------------\n");
+
             // 주소록 연결리스트에 삽입하기
             insert_list(temp);
         }
-
-
-
-
-
-        // // **[Binary] 암호화된 파일 복호화 과정 (구분자 사용?)
-        // int is_eof = 0;
-        // while (1) {
-        //     uint8_t enc_binary[256] = {0, };
-        //     uint8_t enc_str[256] = {0, };
-        //     uint8_t result[256] = {0, };
-        //     uint8_t enc_tmp[1];
-        //     int i=0, len=0;
-
-        //     // 구분자 찾기
-        //     while (1) {
-        //         fread(enc_tmp, sizeof(uint8_t), 1, fp);     // 파일로부터 1byte를 enc_tmp에 읽어와서
-        //         printf("\n[TEST] enc_tmp[0] = %u, len = %d", enc_tmp[0], len);
-        //         if (feof(fp) != 0) {
-        //             is_eof = 1;
-        //             break;
-        //         }
-
-        //         if (enc_tmp[0] == 0x00) {           // 구분자를 만나면 1명분의 데이터를 읽어온것임
-        //             /* 복호화 시작 */
-        //             // Decrypt_test(enc_binary, result);
-        //             printf("\n\n[TEST] 복호화 대상 암호문 -> \n");
-        //             int enc_len = strlen(enc_str);
-        //             for (i=0; i<enc_len; i++) {
-        //                 printf("%02x ", enc_str[i]);
-        //             }
-        //             Decrypt_test(enc_str, result);
-                    
-        //             // printf("\n[TEST] 복호화 결과\n");
-        //             // for (i=0; i<len; i++) {
-        //             //     printf("%02x ", result[i]);
-        //             // }
-        //             printf("\n---------------------------------------------------------------------\n");
-        //             break;
-
-        //             // // 복호화 시작
-        //             // Decrypt_test(enc_binary, result);
-        //             // // 복호화 결과 테스트
-        //             // printf("\n[TEST] 복호화 결과\n");
-        //             // for (i=0; i<len; i++) {
-        //             //     printf("%02x ", result[i]);
-        //             // }
-        //             // printf("\n---------------------------------------------------------------------\n");
-        //             // break;
-        //         }
-        //         else {
-        //             enc_binary[len] = enc_tmp[0];
-        //             enc_str[len] = enc_tmp[0];
-        //             len++;
-        //         }
-        //     }
-        //     // // test code
-        //     // printf("\n[TEST] ->");
-        //     // for (i=0; i<len; i++) {
-        //     //     printf("%02x ", enc_binary[i]);
-        //     // }
-        //     if (is_eof == 1) break;
-
-        //     // int len = fread(enc_str, sizeof(uint8_t), 48, fp);   // 48 고정크기 X
-        //     // if (feof(fp)) break;
-        //     // Decrypt_test(enc_str, result);
-        //     // printf("\n[TEST] len = %d\n", len);
-        //     // for (i=0; i<len; i++) {
-        //     //     printf("%02x ", result[i]);
-        //     // }
-        // }
-        
-
-
-
-
-        // // **(16진수) 암호화된 파일 복호화해서 읽어오는 코드
-        // // [Decrypt] output 파일에 저장되어 있는 암호화된 데이터 -> 다시 복호화 하기!
-        // int cnt = 1;
-        // while (1) {
-        //     if (feof(fp) != 0) break;
-
-        //     uint8_t enc_str[256] = "";
-        //     uint8_t result[256] = "";
-        //     fgets(enc_str, sizeof(enc_str), fp);  // 암호화된 주소록 파일에서 1줄 읽어들이기
-        //     int len = strlen(enc_str);
-        //     // uint8_t* result = (uint8_t*) malloc(sizeof(uint8_t) * len);
-
-        //     // 마지막 개행문자 제거
-        //     if (enc_str[len - 1] == '\n') {
-        //         enc_str[len - 1] = '\0';
-        //     }
-
-        //     printf("[#%d]\n%s", cnt++, enc_str);
-        //     Decrypt_test(enc_str, result);
-            
-        //     // TODO: 복호화 후 내용 테스트
-        //     printf("[TEST] 복호화된 내용 = \n");
-        //     printf("%s", result);
-        //     printf("\n---------------------------------------------------------------------\n");
-
-        //     // TODO: 복호화한 내용 다시 리스트에 넣기 insert_list(???)
-        //     // #1. (Person*)temp 에 각각 값 넣기
-        //     sscanf(result, "%d, %[^,], %[^,], %[^\n]", &(temp->id), temp->name, temp->phone, temp->address);
-        //     printf("[%d]번째 데이터 읽어오기 성공\n", person_cnt+1);
-        //     // #2. insert_list 하기
-        //     insert_list(temp);
-        // }
-        // printf("\n");
-        // // *
-
-
-
-
-
-
-        // /* 일반 텍스트 파일 읽어오는 코드 */
-        // while (1) {
-        //     if (feof(fp) != 0) break;
-        //     fscanf(fp, "%d, %[^,], %[^,], %[^\n]", &(temp->id), temp->name, temp->phone, temp->address);
-        //     printf("[%d]번째 데이터 읽어오기 성공\n", person_cnt+1);
-        //     insert_list(temp);
-        // }
-        // /* */
-
     }
     else {
         printf("File Open Error !\n\n");
@@ -292,45 +133,12 @@ void save_file()
 
         /* Encrypt Process */
         size_t result_len = Encrypt_test(str_tmp, result);      // result_len = (패딩 포함) 암호화된 결과의 길이
-
-        // TODO: 
         fwrite(result, sizeof(uint8_t), result_len, fout_p);
-
-            // test code
-            printf("\n[TEST] 바이너리 파일에 저장된 데이터 = ");
-            for (i=0; i<result_len; i++) {
-                if (i % 16 == 0) puts("");
-                printf("%02x ", result[i]);
-            }
-
-
-
-        // ////// 
-        // Encrypt_test(str_tmp, result);  // Encrypt file
-        // int len = (int)strlen(result);
-        // for (int i=0; i<len; i++) {
-        //     fprintf(fout_p, "%02x", result[i]);
-        // }
-        // fputc('\n', fout_p);
-
-        // // [Test Code]
-        // printf("\n[TEST] [%s]\n", FOUT_NAME);
-        // for (int i=0; i<len; i++) {
-        //     printf("%02x ", result[i]);
-        // }
-        // printf("\n");
-        // //////
     }
-
-    // // 마지막 개행문자 제거
-    // fseek(fout_p, -1, SEEK_END);
-    // fwrite("\0", 1, 1, fout_p);
-
     printf("\n\n[%s] 주소록 저장 성공.\n", FOUT_NAME); 
     printf("프로그램을 종료합니다.\n");
     fclose(fout_p);
 }
-
 
 
 // 초기작업
@@ -366,7 +174,6 @@ void print_list()
 
         Person* now = head->next->next;
         while (now != NULL) {
-            // printf("%-20d\t\t%-20s%-20s%-20s\n", now->id, now->name, now->phone, now->address);
             printf("%03d\t\t%s\t\t%s\t\t%s\n", now->id, now->name, now->phone, now->address);
             now = now->next;
         }
@@ -385,7 +192,6 @@ void insert_list(Person* p)
     strcpy(new->address,    p->address);
 
     if (head == NULL) {
-        // head = new;
         head->next = new;
     }
     else {
