@@ -1,6 +1,10 @@
 {
     "C_Cpp.dimInactiveRegions": true,
     "files.associations": {
-        "types.h": "c"
+        "types.h": "c",
+        "string.h": "c",
+        "pkcs7_padding.h": "c",
+        "stdio.h": "c",
+        "test.h": "c"
     }
 }
