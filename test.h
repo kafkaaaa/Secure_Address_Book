@@ -36,8 +36,8 @@ static int test_encrypt_ecb(void);
 static int test_decrypt_ecb(void);
 static void test_encrypt_ecb_verbose(void);
 
-size_t Encrypt_test(uint8_t[], uint8_t[]);
-void Decrypt_test(uint8_t len, uint8_t[], uint8_t[]);
+extern size_t Encrypt_test(uint8_t[], uint8_t[]);
+extern void Decrypt_test(uint8_t len, uint8_t[], uint8_t[]);
 
 
 #endif

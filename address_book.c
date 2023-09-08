@@ -1,5 +1,8 @@
-#include "test.h"
 #include "address_book.h"
+
+extern size_t Encrypt_test(uint8_t[], uint8_t[]);
+extern void Decrypt_test(uint8_t len, uint8_t[], uint8_t[]);
+
 
 int main() {
 
