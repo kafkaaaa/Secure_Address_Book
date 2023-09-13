@@ -1,11 +1,13 @@
-#include <mysql.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <stddef.h>
+#include <stdlib.h>     // atoi, malloc, free, exit ...
+#include <stdint.h>     // uint8_t
+#include <stddef.h>     // size_t
+#include <string.h>     // strlen
+#include <mysql.h>      // mysql c api
+#include "AES.h"
+#include "pkcs7_padding.h"
 
 
-// 매크로 정의
 #ifndef MAX
 #define MAX 1000
 #endif
@@ -18,59 +20,47 @@
 #define DATA_LEN_LIMIT 20
 #endif
 
-#ifndef FILE_NAME_LIMIT
-#define FILE_NAME_LIMIT 50
+#define CBC 1
+
+#ifndef IV_LEN
+#define IV_LEN 16
 #endif
 
 
-// #define SAVE_MODE_TXT 1
-#define SAVE_MODE_BIN 1
-#if defined(SAVE_MODE_TXT)
-    #define FOUT_NAME "output.txt"
-#elif defined(SAVE_MODE_BIN)
-    #define FOUT_NAME "output.bin"
-#endif
-
-
-// 구조체 정의
 typedef struct Person {
     int id;
     uint8_t name[DATA_LEN_LIMIT];
     uint8_t phone[DATA_LEN_LIMIT];
     uint8_t address[DATA_LEN_LIMIT];
-    struct Person *next;
 } Person;
 
 
-// 전역 변수 선언
-Person *head, *tail, *tmp;
-FILE *fp;
-int person_cnt; // 주소록에 등록된 사람 수
-
 MYSQL *con;
-const char *db_host = "192.168.1.40";
-const char *db_user = "syyoo";
-const char *db_pwd  = "one123";
-const char *db_name = "address_book";
-const char *table_name   = "book1";
+const char *DB_USER     = "syyoo";
+const char *DB_HOST     = "192.168.1.40";
+const char *DB_PWD      = "one123";
+const char *DB_NAME     = "address_book";
+const char *TABLE_NAME  = "book1";
+// uint8_t iv[IV_LEN];
+// char* key;
+const uint8_t iv[IV_LEN] = {0x65, 0x67, 0x6c, 0x6f, 0x62, 0x61, 0x6c, 0x73, 0x79, 0x73, 0x74, 0x65, 0x6d, 0x6d, 0x0d, 0x0a};
+const char* key = "eglobalsystemeglobalsystem";
 
 
-
-// 함수 선언
 void connect_to_db();
-void finish_with_error(MYSQL *con);
-int is_table_empty(MYSQL* con);
-
-void create_table(const char* table_name);
+void create_table(const char* TABLE_NAME);
 void print_db();
 void insert_into_db();
 void update_db();
 void delete_from_db();
 
-
-void load_file();
-void save_file();
-
+void finish_with_error(MYSQL *con);
+int is_table_empty(MYSQL* con);
 
 void clear_buffer();
+
+
+void encrypt_private_data(uint8_t plain[], uint8_t result[]);
+void decrypt_private_data();
+void decrypt_with_auth();
 

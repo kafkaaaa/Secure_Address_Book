@@ -1,13 +1,10 @@
 #include "address_book_db.h"
 
-extern size_t Encrypt_test(uint8_t[], uint8_t[]);
-extern void Decrypt_test(uint8_t len, uint8_t[], uint8_t[]);
-
-
 int main() {
 
     int menu;
     connect_to_db();
+    create_table(TABLE_NAME);
 
     while (1) {
         printf("\n======= MENU =======\n");
@@ -15,11 +12,12 @@ int main() {
         printf("  #2. 주소록 추가\n");
         printf("  #3. 주소록 수정\n");
         printf("  #4. 주소록 삭제\n");
-        printf("  #5. 종료\n");
+        printf("  #5. 복호화\n");
+        printf("  #6. 프로그램 종료\n");
         printf("====================\n");
         printf("작업을 선택해주세요->  ");
         scanf(" %d", &menu);
-        if (menu > 5 || menu < 1) {
+        if (menu > 6 || menu < 1) {
             printf("잘못된 입력입니다. 다시 시도해주세요.\n");
         }
         clear_buffer();
@@ -28,126 +26,14 @@ int main() {
         else if (menu == 2)     insert_into_db();
         else if (menu == 3)     update_db();
         else if (menu == 4)     delete_from_db();
-        else if (menu == 5) {   save_file();    break;  }
+        else if (menu == 5)     decrypt_with_auth();      // TODO: 암호화된 개인정보 -> 복호화 하기
+        else if (menu == 6) {   mysql_close(con); break;   }
         else {
-            printf("1~5만 입력해주세요.\n");
+            printf("1~6만 입력해주세요.\n");
         }
     }
     return 0;
 }
-
-
-
-
-// 파일로부터 주소록 데이터 자동 불러오기
-void load_file()
-{
-    char file_name[FILE_NAME_LIMIT];
-    Person* temp = (Person *)malloc(sizeof(Person));
-    size_t i;
-
-    while (1) {
-        printf("***주소록 파일을 불러옵니다***\n");
-        printf("파일 이름을 입력해주세요: ");
-        scanf("%s", file_name);
-        if (strlen(file_name) > FILE_NAME_LIMIT) {
-            printf("파일명 길이 초과. 다시 입력해주세요.\n\n");
-        }
-        else if (fopen(file_name, "rb") == NULL) {
-            printf("파일 열기 실패!! 파일명을 확인해주세요.\n\n");
-        }
-        else break;
-    }
-
-    fp = fopen(file_name, "rb");
-    if (fgetc(fp) == EOF) {
-        printf("파일이 비어있습니다. 프로그램을 종료합니다.\n");
-        exit(1);
-    }
-    else if (fp != NULL) {
-        printf("\nFile Open Success !\n");
-        rewind(fp);
-
-        printf("\n[%s] 파일을 복호화 합니다...", file_name);
-        printf("\n---------------------------------------------------------------------\n");
-
-        /* binary로 저장된 output 파일 복호화 */
-        while (1) {
-            uint8_t len = PERSON_DATA_LEN;
-            if (len % 16 != 0) {
-                len += 16 - (len % 16);
-            }
-            uint8_t enc_tmp[len];
-            uint8_t result[len];
-            fread(enc_tmp, sizeof(uint8_t), len, fp);
-            if (feof(fp) != 0) break;
-
-            Decrypt_test(len, enc_tmp, result);
-
-            // 복호화한 내용 다시 리스트에 넣기
-            sscanf(result, "%d, %[^,], %[^,], %[^\n]", &(temp->id), temp->name, temp->phone, temp->address);
-            printf("[%d]번째 데이터 읽어오기 성공", person_cnt+1);
-            printf("\n---------------------------------------------------------------------\n");
-
-            // 주소록 연결리스트에 삽입하기
-            insert_list(temp);
-        }
-    }
-    else {
-        printf("File Open Error !\n\n");
-    }
-    free(temp);
-    fclose(fp);
-}
-
-
-/* 프로그램 종료시 주소록 리스트에 있는 Data들을 파일로 저장하기 */
-void save_file()
-{
-    size_t i;
-    FILE* fout_p = fopen(FOUT_NAME, "wb");
-    
-    if (fout_p == NULL) {
-        printf("\n[%s] 파일 생성에 실패했습니다!\n\n", FOUT_NAME);
-        return;
-    }
-    else {
-        printf("\n[%s] 파일이 생성되었습니다.\n", FOUT_NAME);
-    }
-
-    printf("[AES-256] [MDOE= CBC] [Padding= PKCS7] 암호화를 시작합니다...\n\n");
-
-    /* 1명씩 암호화 해서 저장 */
-    Person *p = head->next;
-    while (1) {
-        p = p->next;
-        if (p == NULL) break;
-
-        uint8_t str_tmp[PERSON_DATA_LEN] = {0, };
-        uint8_t result[PERSON_DATA_LEN + 16] = {0, };
-        sprintf(str_tmp, "%d", p->id);         strcat(str_tmp, ",");
-        strcat(str_tmp, p->name);              strcat(str_tmp, ",");
-        strcat(str_tmp, p->phone);             strcat(str_tmp, ",");
-        strcat(str_tmp, p->address);           strcat(str_tmp, "\n");
-
-        /* Encrypt Process */
-        size_t result_len = Encrypt_test(str_tmp, result);      // result_len = (패딩 포함) 암호화된 결과의 길이
-        fwrite(result, sizeof(uint8_t), result_len, fout_p);
-    }
-    printf("\n\n[%s] 주소록 저장 성공.\n", FOUT_NAME); 
-    printf("프로그램을 종료합니다.\n");
-    fclose(fout_p);
-}
-
-
-
-
-
-
-
-
-
-
 
 
 void clear_buffer() {
@@ -166,7 +52,6 @@ void finish_with_error(MYSQL *con)
 }
 
 
-
 /* DB 서버 연결 및 초기 작업 */
 void connect_to_db()
 {
@@ -177,44 +62,49 @@ void connect_to_db()
         exit(1);
     }
 
-    if (mysql_real_connect(con, db_host, db_user, db_pwd, db_name,
-                            0, NULL, CLIENT_MULTI_STATEMENTS) != NULL) {    
-        printf("[DB connect success!]\n");
+    if (mysql_real_connect(con, DB_HOST, DB_USER, DB_PWD, DB_NAME,
+                            0, NULL, CLIENT_MULTI_STATEMENTS) != NULL)
+    {    
         printf("MySQL [Client] Version = %s\n", mysql_get_client_info());
         printf("MySQL [Server] Version = %s\n", mysql_get_server_info(con));
         // printf("MySQL [Server] Version = %lu\n", mysql_get_server_version(con));
         printf("[HOST] = %s\n", mysql_get_host_info(con));
     }
     else finish_with_error(con);
-    
-    create_table(table_name);
-}
 
+    // character-set (한글 포함)
+    mysql_set_character_set(con, "UTF-8");
+    printf("\n[DB연결 및 초기 작업 완료]\n");
+}
 
 
 /* 테이블 생성 */
-void create_table(const char* table_name)
+void create_table(const char* TABLE_NAME)
 {
     // // 이미 같은이름의 테이블이 있으면 삭제
     // char drop_table_query[50];
-    // sprintf(drop_table_query, "DROP TABLE IF EXISTS %s", table_name);
-    // if (mysql_query(con, drop_table_query));    
+    // sprintf(drop_table_query, "DROP TABLE IF EXISTS %s", TABLE_NAME);
+    // if (mysql_query(con, drop_table_query)) {
+    //     printf("\n[이미 존재하는 테이블 삭제 오류]\n");
+    //     finish_with_error(con);
+    // }
+    // else printf("\n[기존 테이블 %s 삭제]\n", TABLE_NAME);
 
-    char create_table_query[200];
-    sprintf(create_table_query, "CREATE TABLE %s(\
-            id      INT     PRIMARY KEY,\
+
+    // 기존 테이블이 존재하지 않으면 생성
+    char create_table_query[400];
+    sprintf(create_table_query, "CREATE TABLE IF NOT EXISTS %s(\
+            id      INT     PRIMARY KEY     AUTO_INCREMENT,\
             name    VARCHAR(%d),\
             phone   VARCHAR(%d),\
             address VARCHAR(%d))",
-            table_name, DATA_LEN_LIMIT, DATA_LEN_LIMIT, DATA_LEN_LIMIT);
+            TABLE_NAME, DATA_LEN_LIMIT, DATA_LEN_LIMIT, DATA_LEN_LIMIT);
     if (mysql_query(con, create_table_query)) {
+        printf("\n[테이블 생성 오류]\n");
         finish_with_error(con);
     }
-
-    mysql_close(con);
-    exit(0);
+    else printf("\n[테이블 %s 생성]\n", TABLE_NAME);
 }
-
 
 
 /* 전체 주소록 출력하기 */
@@ -226,33 +116,32 @@ void print_db()
         printf("----------------------------------------------------------------------------\n");
 
         char count_row_query[50];
-        sprintf(count_row_query, "SELECT COUNT(*) FROM %s);", table_name);
+        sprintf(count_row_query, "SELECT COUNT(*) FROM %s", TABLE_NAME);
         mysql_query(con, count_row_query);
         MYSQL_RES* res = mysql_store_result(con);
-        printf("<현재 등록된 사람: %d명>\n", res->data);
+        MYSQL_ROW res_row = mysql_fetch_row(res);
+        printf("<현재 등록된 사람: %d명>\n", atoi(res_row[0]));
         mysql_free_result(res);
         printf("----------------------------------------------------------------------------\n");
 
 
         printf("ID\t\t이름\t\t전화번호\t\t주소\n");
         printf("----------------------------------------------------------------------------\n");
-        MYSQL_RES* result;
-        MYSQL_ROW res_rows;
         char select_all_query[50];
-        sprintf(select_all_query, "SELECT * FROM %s);", table_name);
+        sprintf(select_all_query, "SELECT * FROM %s", TABLE_NAME);
         mysql_query(con, select_all_query);
         MYSQL_RES* result = mysql_store_result(con);
+        MYSQL_ROW res_rows;
         while (res_rows = mysql_fetch_row(result)) {
-            printf("%d\t\t%s\t\t%s\t\t%s\n", res_rows[0], res_rows[1], res_rows[2], res_rows[3]);
-            // ex) ID       이름        전화번호        주소
-            //     123      홍길동      010-1234-5678   서울1
-            // TODO: 출력 TEST CODE
+            printf("%d\t\t%s\t\t%s\t\t%s\n", atoi(res_rows[0]), res_rows[1], res_rows[2], res_rows[3]);
+            // ex) ID     이름        전화번호        주소
+            //     123    홍길동      010-1234-5678   서울1
+            //     456    홍길둥      010-1111-2222   서울2
         }
         mysql_free_result(result);
         printf("-----------------------------------END-------------------------------------\n");
     }
 }
-
 
 
 /* (사용자 입력으로) 주소록 테이블에 데이터 추가하기 */
@@ -265,7 +154,7 @@ void insert_into_db()
         scanf(" %[^\n]s", new_person->name);
         clear_buffer();
         if (strlen(new_person->name) > DATA_LEN_LIMIT) {
-            printf("입력 길이 초과!! 다시 입력해주세요.\n");
+            printf("입력 길이 초과!! (20자 제한) 다시 입력해주세요.\n");
         }
         else break;
     }
@@ -275,7 +164,7 @@ void insert_into_db()
         scanf(" %[^\n]s", new_person->phone);
         clear_buffer();
         if (strlen(new_person->phone) > DATA_LEN_LIMIT) {
-            printf("입력 길이 초과!! 다시 입력해주세요.\n");
+            printf("입력 길이 초과!! (20자 제한) 다시 입력해주세요.\n");
         }
         else break;
     }
@@ -285,45 +174,70 @@ void insert_into_db()
         scanf(" %[^\n]s", new_person->address);
         clear_buffer();
         if (strlen(new_person->address) > DATA_LEN_LIMIT) {
-            printf("입력 길이 초과!! 다시 입력해주세요.\n");
+            printf("입력 길이 초과!! (20자 제한) 다시 입력해주세요.\n");
         }
         else break;
     }
+        // // TEST CODE
+        // printf("\n[TEST]\n");
+        // printf("name: %s\nphone: %s\naddress: %s\n", new_person->name, new_person->phone, new_person->address);
+
+
+
+    // TODO: DB에 넣기 전에 암호화 작업 수행
+
+    // <전체적인 순서> ???
+    // -암호화 (insert) : plain text -> encrypt -> binary -> base64 encoding -> DB에 insert
+    // -복호화 (select) : base64 decoding -> binary -> decrypt (선택) -> plain text
+
+    uint8_t plain_name[DATA_LEN_LIMIT] = {0, };
+    uint8_t plain_phone[DATA_LEN_LIMIT] = {0, };
+    uint8_t plain_address[DATA_LEN_LIMIT] = {0, };
+    strcat(plain_name, new_person->name);
+    strcat(plain_phone, new_person->phone);
+    strcat(plain_address, new_person->address);
+    
+    uint8_t *encrypted_name;
+    uint8_t *encrypted_phone;
+    uint8_t *encrypted_address;
+    encrypted_name      = (uint8_t*) calloc(AES_BLOCKLEN * 8 + 1, sizeof(uint8_t));
+    encrypted_phone     = (uint8_t*) calloc(AES_BLOCKLEN * 8 + 1, sizeof(uint8_t));
+    encrypted_address   = (uint8_t*) calloc(AES_BLOCKLEN * 8 + 1, sizeof(uint8_t));
+    // encrypt_private_data(new_person->name, encrypted_name);
+    // encrypt_private_data(new_person->phone, encrypted_phone);
+    // encrypt_private_data(new_person->address, encrypted_address);
+    encrypt_private_data(plain_name, encrypted_name);
+    encrypt_private_data(plain_phone, encrypted_phone);
+    encrypt_private_data(plain_address, encrypted_address);
+
+        // TEST CODE
+        printf("\n\n[TEST] 암호화된 데이터\n");
+        printf("%s\n%s\n%s\n", encrypted_name, encrypted_phone, encrypted_address);
+
+
 
     // DB 테이블에 값 넣기
-    char* insert_query;
-    sprintf(insert_query, "INSERT INTO %s VALUES('%s', '%s', '%s')",
-        table_name, new_person->name, new_person->phone, new_person->address);   // ID값은 AUTO_INCREMENT
+    char insert_query[1000];
+    // sprintf(insert_query, "INSERT INTO %s VALUES(DEFAULT, '%s', '%s', '%s')",
+    //     TABLE_NAME, new_person->name, new_person->phone, new_person->address);   // ID값은 AUTO_INCREMENT
+    sprintf(insert_query, "INSERT INTO %s VALUES(DEFAULT, '%s', '%s', '%s')",
+        TABLE_NAME, encrypted_name, encrypted_phone, encrypted_address);   // ID값은 AUTO_INCREMENT
 
     if (mysql_query(con, insert_query)) {
         finish_with_error(con);
     }
 
+
     free(new_person);
-}
-
-
-
-/* DB 테이블이 비어있는지 확인하는 함수 */
-int is_table_empty(MYSQL* con)
-{
-    char is_empty_query[50];
-    sprintf(is_empty_query, "SELECT EXISTS (SELECT 1 FROM %s);", table_name);  
-    mysql_query(con, is_empty_query);
-    MYSQL_RES* res = mysql_store_result(con);
-
-    if (res->data == 0) {
-        printf("\n주소록이 비어있습니다.\n");
-        mysql_free_result(res);
-        return 1;
-    }
-    else return 0;
+    free(encrypted_name);
+    free(encrypted_phone);
+    free(encrypted_address);
 }
 
 
 
 
-/* 주소록 DB 테이블 수정하기 */
+/* 주소록 테이블 수정하기 */
 void update_db()
 {
     if (is_table_empty(con)) {      // 테이블이 비어있는지 먼저 확인
@@ -332,11 +246,10 @@ void update_db()
     }
 
     int id, update_option;
-
     printf("----주소록을 수정합니다----\n");
 
     while (1) {
-        printf("수정할 사람의 ID를 입력해주세요: ");
+        printf("\n수정할 사람의 ID를 입력해주세요: ");
         scanf("%d", &id);
         clear_buffer();
         if (id < 1 || id > MAX) {
@@ -346,9 +259,9 @@ void update_db()
     }
 
     while (1) {
-        printf("[ID=%d]인 사람의 데이터를 수정합니다.\n", id);
+        printf("\n[ID=%d]인 사람의 데이터를 수정합니다.\n", id);
         printf("1.이름  2.전화번호  3.주소\n");
-        printf("수정할 항목을 선택해주세요: ");
+        printf("\n수정할 항목을 선택해주세요: ");
         scanf("%d", &update_option);
         clear_buffer();
         if (update_option < 1 || update_option > 3) {
@@ -368,9 +281,9 @@ void update_db()
                     printf("[입력 길이 초과!!] 다시 입력해주세요.\n");
                 }
                 else {
-                    char* update_name_query;
+                    char update_name_query[200];
                     sprintf(update_name_query, "UPDATE %s SET name='%s' WHERE id=%d",
-                                                    table_name,     new_name,    id);
+                                                    TABLE_NAME,     new_name,    id);
                     if (mysql_query(con, update_name_query)) {
                         printf("[수정 실패!!]\n");
                         finish_with_error(con);
@@ -382,6 +295,7 @@ void update_db()
                     }
                 }
             }
+            break;
 
         case 2:
             while (1) {
@@ -393,9 +307,9 @@ void update_db()
                     printf("[입력 길이 초과!!] 다시 입력해주세요.\n");
                 }
                 else {
-                    char* update_phone_query;
+                    char update_phone_query[200];
                     sprintf(update_phone_query, "UPDATE %s SET name='%s' WHERE id=%d",
-                                                    table_name,     new_phone,    id);
+                                                    TABLE_NAME,     new_phone,    id);
                     if (mysql_query(con, update_phone_query)) {
                         printf("[수정 실패!!]\n");
                         finish_with_error(con);
@@ -407,6 +321,7 @@ void update_db()
                     }
                 }
             }
+            break;
 
 
         case 3:
@@ -419,9 +334,9 @@ void update_db()
                     printf("[입력 길이 초과!!] 다시 입력해주세요.\n");
                 }
                 else {
-                    char* update_addr_query;
+                    char update_addr_query[200];
                     sprintf(update_addr_query, "UPDATE %s SET name='%s' WHERE id=%d",
-                                                    table_name,     new_addr,    id);
+                                                    TABLE_NAME,     new_addr,    id);
                     if (mysql_query(con, update_addr_query)) {
                         printf("[수정 실패!!]\n");
                         finish_with_error(con);
@@ -433,9 +348,9 @@ void update_db()
                     }
                 }
             }
+            break;
     }
 }
-
 
 
 /* ID값으로 주소록에서 사람 삭제하기 */
@@ -457,13 +372,124 @@ void delete_from_db()
         else break;
     }
 
-    char* delete_query;
-    sprintf(delete_query, "DELETE FROM %s WHERE id=%d", table_name, target_id);
+    char delete_query[50];
+    sprintf(delete_query, "DELETE FROM %s WHERE id=%d", TABLE_NAME, target_id);
     if (mysql_query(con, delete_query)) {
         printf("[삭제 실패!!] 해당하는 사람이 없습니다.\n");
         finish_with_error(con);
         return;
     }
+}
+
+
+/* DB 테이블이 비어있는지 확인하는 함수 */
+int is_table_empty(MYSQL* con)
+{
+    char is_empty_query[50];
+    sprintf(is_empty_query, "SELECT EXISTS (SELECT 1 FROM %s);", TABLE_NAME);  
+    mysql_query(con, is_empty_query);
+    MYSQL_RES* res = mysql_store_result(con);
+
+    if (res->data == 0) {
+        printf("\n주소록이 비어있습니다.\n");
+        mysql_free_result(res);
+        return 1;
+    }
+    else return 0;
+}
+/* ---------------------------------------------------------------*/
+
+
+/* AES 암/복호화 함수 */
+void encrypt_private_data(uint8_t plain[], uint8_t result[])
+{
+    size_t i;
+    printf("\n------------ Encrypt Data... ------------\n");
+
+    // size_t plain_len = PERSON_DATA_LEN;         // 고정크기로 암호화
+    size_t plain_len = DATA_LEN_LIMIT;         // 고정크기로 암호화
+    size_t key_len = strlen(key);              // Length of Key
+        // TEST CODE
+        printf("[Plain Text] = ");
+        for (i=0; i<plain_len; i++)
+            printf("%c", plain[i]);
+        printf("\n");
+
+    // 평문 길이를 16의 배수로 맞춤
+    size_t hex_plain_len = plain_len;
+    if (plain_len % 16) {
+        hex_plain_len += 16 - (plain_len % 16);
+        printf("The original Length of (Plain Text) = %zd\n", plain_len);
+        printf("The Length of (padded Plain Text) = %zd\n", hex_plain_len);
+    }
+
+    // 키의 길이를 16의 배수로 맞춤
+    size_t hex_key_len = key_len;
+    if (key_len % 16) {
+        hex_key_len += 16 - (key_len % 16);
+        printf("The original Length of (KEY) = %zd\n", key_len);
+        printf("The Length of (padded KEY) = %zd\n", hex_key_len);
+    }
+
+    // 패딩된 데이터를 저장할 배열
+    uint8_t padded_plain[hex_plain_len];
+    uint8_t padded_key[hex_key_len];
+    memset(padded_plain, 0, hex_plain_len);
+    memset(padded_key, 0, hex_key_len);
+
+    for (i=0; i<plain_len; i++)
+        padded_plain[i] = plain[i];
+    
+    for (i=0; i<key_len; i++)
+        padded_key[i] = key[i];
+    
+    /* padding with PKCS7 */
+    // pkcs7_padding_pad_buffer -> returns the number of paddings it added
+    pkcs7_padding_pad_buffer(padded_plain, plain_len, sizeof(padded_plain), AES_BLOCKLEN);
+    pkcs7_padding_pad_buffer(padded_key, key_len, sizeof(padded_key), AES_BLOCKLEN);
+
+    printf("\nThe padded Plain Text (HEX) is...");
+    for (i=0; i<hex_plain_len; i++) {
+        if (i % 16 == 0) puts("");
+        printf("%02x ", padded_plain[i]);
+    }
+    puts("");
+
+    // printf("\nThe padded Key (HEX) is...");
+    // for (i=0; i<hex_key_len; i++) {
+    //     if (i % 16 == 0) puts("");
+    //     printf("%02x ", padded_key[i]);
+    // }
+    // puts("");
+    
+
+    // ** Encryption Test **
+    struct AES_ctx ctx;
+    AES_init_ctx_iv(&ctx, padded_key, iv);
+    AES_CBC_encrypt_buffer(&ctx, padded_plain, hex_plain_len);
+    printf("\n[Encrypted] String is... ");
+    for (i=0; i<hex_plain_len; i++) {
+        if (i % 16 == 0) puts("");
+        result[i] = padded_plain[i];
+        printf("%02x ", padded_plain[i]);
+    }
+    puts("");
+}
+
+
+
+
+
+void decrypt_private_data()
+{
+
+}
+
+
+
+/* 비밀번호로 인증 성공 시 복호화 */
+void decrypt_with_auth() {
+    
 }
 
 
