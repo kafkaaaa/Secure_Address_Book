@@ -12,8 +12,12 @@
  - 헤더 파일 분리  
  - Makefile 작성  
  - 동적 라이브러리(shared lib) 구성  
-  
-**<MySQL(MariaDB)로 주소록 이전 작업 중...>**
+
+ - **addr_book_db**
+   - 개인정보(전화번호 등) **Base64 Encoding** 해서 주소록DB에 저장
+   - 비밀번호로 인증되면 암호화된 개인정보 볼 수 있는 메뉴 추가
+   - #암호화 과정: Plain Text -> (AES-256/CBC) Encryption -> Binary Data -> (Base64) Encoding
+   - #복호화 과정: (Base64)Encoded Text -> Decoding (Base64) -> Binary Data -> Decryption (AES-256/CBC) -> Plain Text
   
   
 ## Build
