@@ -3,9 +3,11 @@
 #include <stdint.h>     // uint8_t
 #include <stddef.h>     // size_t
 #include <string.h>     // strlen
+#include <termios.h>    // pwd input (echo enable)
 #include <mysql.h>      // mysql c api
 #include "AES.h"
 #include "pkcs7_padding.h"
+#include "Base64.h"
 
 
 #ifndef MAX
@@ -18,6 +20,10 @@
 
 #ifndef DATA_LEN_LIMIT
 #define DATA_LEN_LIMIT 20
+#endif
+
+#ifndef PWD_LEN_LIMIT
+#define PWD_LEN_LIMIT 20
 #endif
 
 #define CBC 1
@@ -61,6 +67,7 @@ void clear_buffer();
 
 
 void encrypt_private_data(uint8_t plain[], uint8_t result[]);
-void decrypt_private_data();
+void decrypt_private_data(uint8_t base64_encoded_str[], uint8_t result[]);
 void decrypt_with_auth();
-
+int pwd_auth();
+void print_db_decrypted();
