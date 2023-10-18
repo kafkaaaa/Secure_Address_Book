@@ -27,6 +27,14 @@ $ ./addr_book
 $ output.bin    (*example)
 ```
   
+
+## Example (addr_book_db)
+
+### ./addr_book
+<img src="https://github.com/kafkaaaa/Secure_Address_Book/assets/20926959/0b4bfc4f-b851-4ff5-b559-caaa746a6945">
+
+### DBeaver
+<img src="https://github.com/kafkaaaa/Secure_Address_Book/assets/20926959/991dcebb-fda3-4bd2-a2bc-9a74b30c96bf">
   
 ## Ref
 - <https://github.com/kokke/tiny-AES-c>  
